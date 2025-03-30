@@ -25,7 +25,7 @@ This project is built using:
 
 ## Getting Started
 
-Play the game: RafsEmojiCasino.com
+Play the game: https://RafsEmojiCasino.com
 
 ## Usage
 
