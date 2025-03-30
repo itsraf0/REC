@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REC - Slots</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <style>
+        /* Common styles */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Slots specific styles */
+        body.slots-page {
+            background-color: #2c3e50;
+        }
+
+        .slot-machine {
+            background-color: #34495e;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .reels {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .reel {
+            background-color: #ecf0f1;
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Common game elements */
+        h1 {
+            color: #ecf0f1;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        button#spinButton {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            padding: 0.8rem 2rem;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button#spinButton:hover {
+            background-color: #c0392b;
+        }
+
+        button#spinButton:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        #betAmount {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            width: 100px;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stats {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            color: #ecf0f1;
+        }
+
+        .multipliers {
+            color: #ecf0f1;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            text-align: left;
+            padding: 1rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+
+        #lastWin {
+            margin-left: 1rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .win { color: #2ecc71; }
+        .loss { color: #e74c3c; }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .fade-out {
+            animation: fadeOut 4s forwards;
+        }
+
+        /* Quick switch menu */
+        .quick-switch {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quick-switch a {
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-switch a:hover {
+            background: #c0392b;
+        }
+
+        .quick-switch a.current {
+            background: #2c3e50;
+            cursor: default;
+        }
+
+        .quick-switch a.current:hover {
+            background: #2c3e50;
+        }
+    </style>
+</head>
+
+<body class="slots-page">
+    <div class="slot-machine">
+        <h1>🎰 Emoji Slots 🎰</h1>
+        <div class="stats">
+            <div>Balance: <span id="balance">100</span> 🪙 <span id="lastWin"></span></div>
+        </div>
+        <div class="controls">
+            <input type="number" id="betAmount" value="10" min="1" max="100">
+            <button onclick="spin()" id="spinButton">Spin!</button>
+        </div>
+        <div class="reels">
+            <div class="reel" id="reel1">🎲</div>
+            <div class="reel" id="reel2">🎲</div>
+            <div class="reel" id="reel3">🎲</div>
+            <div class="reel" id="reel4">🎲</div>
+            <div class="reel" id="reel5">🎲</div>
+        </div>
+        <div class="multipliers">
+            Win Multipliers:
+            <br>- Three of the same type: 3x
+            <br>- Four of the same type: 5x
+            <br>- Five of the same type: 10x
+            <br>- Five 7️⃣'s: 50x
+            <br>- 💵 Cash bonus: +1 coin
+            <br>- 💰 Bag bonus: +11 coins
+        </div>
+    </div>
+
+    <div class="quick-switch">
+        <a href="../index.html">🏠 Home</a>
+        <a href="index.html" class="current">🎰 Slots</a>
+        <a href="../plinko">🎱 Plinko</a>
+    </div>
+
+    <script>
+// emojis : 🍒🍓🍋🔔💵💰7️⃣
+const emojis = ['🍒', '🍓', '🍋', '🔔', '💵', '💰', '7️⃣'];
+// probability weights (higher number = more common)
+const weights = [
+    100,  // 🍒 Cherry
+    100,  // 🍓 Strawberry
+    80,   // 🍋 Lemon
+    50,   // 🔔 Bell
+    30,   // 💵 Cash
+    20,   // 💰 Money bag
+    50    // 7️⃣ Seven
+];
+
+const reels = document.querySelectorAll('.reel');
+const spinButton = document.getElementById('spinButton');
+const betInput = document.getElementById('betAmount');
+const balanceDisplay = document.getElementById('balance');
+
+// Cookie handling functions
+function setCookie(name, value, days) {
+    try {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+        // Add SameSite and Secure attributes for better security
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+        return true;
+    } catch (error) {
+        console.error('Error setting cookie:', error);
+        return false;
+    }
+}
+
+function getCookie(name) {
+    try {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) {
+                const value = c.substring(nameEQ.length, c.length);
+                // Validate the value is a number
+                const parsed = parseInt(value);
+                return !isNaN(parsed) ? parsed : null;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Error getting cookie:', error);
+        return null;
+    }
+}
+
+// Initialize balance from cookie or default to 1000
+let balance = getCookie('gameBalance');
+if (balance === null) {
+    balance = 1000;
+    setCookie('gameBalance', balance, 30);
+}
+balanceDisplay.textContent = balance;
+
+function updateBalance(amount) {
+    balance += amount;
+    balanceDisplay.textContent = balance;
+    // Save to cookie (expires in 30 days)
+    if (!setCookie('gameBalance', balance, 30)) {
+        console.warn('Failed to save balance to cookie');
+    }
+}
+
+// Add reset balance button
+const resetButton = document.createElement('button');
+resetButton.textContent = 'Reset Balance';
+resetButton.style.marginLeft = '1rem';
+resetButton.style.backgroundColor = '#95a5a6';
+resetButton.onclick = function() {
+    if (confirm('Are you sure you want to reset your balance to 1000?')) {
+        balance = 1000;
+        updateBalance(0);
+    }
+};
+document.querySelector('.controls').appendChild(resetButton);
+
+function getRandomEmoji() {
+    // Calculate total weight
+    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+    
+    // Get a random number between 0 and total weight
+    let random = Math.random() * totalWeight;
+    
+    // Find the emoji based on weights
+    for (let i = 0; i < emojis.length; i++) {
+        random -= weights[i];
+        if (random <= 0) {
+            return emojis[i];
+        }
+    }
+    
+    //(shouldn't reach here)
+    return emojis[0];
+}
+
+function spin() {
+    const bet = parseInt(betInput.value);
+    
+    // Validate bet
+    if (bet < 1) {
+        alert('Minimum bet is 1 coin!');
+        return;
+    }
+    if (bet > balance) {
+        alert('Not enough coins!');
+        return;
+    }
+
+    // Deduct bet amount and show loss
+    updateBalance(-bet);
+    showWinLoss(-bet);
+    
+    spinButton.disabled = true;
+    betInput.disabled = true;
+    
+    const reelSpinDurations = [20, 25, 30, 35, 40];
+    const spinInterval = 100;
+    
+    reels.forEach((reel, index) => {
+        let spins = 0;
+        const maxSpins = reelSpinDurations[index];
+        
+        const interval = setInterval(() => {
+            reel.textContent = getRandomEmoji();
+            spins++;
+            
+            if (spins >= maxSpins) {
+                clearInterval(interval);
+                
+                if (index === reels.length - 1) {
+                    checkWin(bet);
+                    spinButton.disabled = false;
+                    betInput.disabled = false;
+                }
+            }
+        }, spinInterval);
+    });
+}
+
+function showWinLoss(amount) {
+    const lastWin = document.getElementById('lastWin');
+    lastWin.textContent = amount > 0 ? `+${amount}` : amount;
+    lastWin.className = amount >= 0 ? 'win' : 'loss';
+    lastWin.style.opacity = '1';
+    
+    // Remove old animation
+    lastWin.classList.remove('fade-out');
+    // Trigger reflow
+    void lastWin.offsetWidth;
+    // Add new animation
+    lastWin.classList.add('fade-out');
+}
+
+function checkWin(bet) {
+    const results = Array.from(reels).map(reel => reel.textContent);
+    let winAmount = 0;
+    let message = '';
+    let bonusCoins = 0;
+    
+    // Check for bonus symbols first
+    results.forEach(symbol => {
+        if (symbol === '💵') bonusCoins += 1;
+        if (symbol === '💰') bonusCoins += 11;
+    });
+
+    // Count occurrences of each symbol
+    const symbolCounts = results.reduce((counts, symbol) => {
+        counts[symbol] = (counts[symbol] || 0) + 1;
+        return counts;
+    }, {});
+
+    // Check for five 7️⃣'s (highest payout)
+    if (symbolCounts['7️⃣'] === 5) {
+        winAmount = bet * 50;
+        message = '🎉🎉🎉 MEGA JACKPOT! Five 7️⃣\'s! (50x) 🎉🎉🎉';
+    }
+    // Check for five of any symbol
+    else if (Object.values(symbolCounts).includes(5)) {
+        winAmount = bet * 10;
+        message = '🎉🎉 JACKPOT! Five of a kind! (10x) 🎉🎉';
+    }
+    // Check for four of any symbol
+    else if (Object.values(symbolCounts).includes(4)) {
+        winAmount = bet * 5;
+        message = '🎉 Great! Four of a kind! (5x) 🎉';
+    }
+    // Check for three of any symbol
+    else if (Object.values(symbolCounts).includes(3)) {
+        winAmount = bet * 3;
+        message = '🎉 Winner! Three of a kind! (3x) 🎉';
+    }
+
+    // Handle wins and bonuses
+    if (winAmount > 0 || bonusCoins > 0) {
+        const totalWin = winAmount + bonusCoins;
+        setTimeout(() => {
+            showWinLoss(totalWin);
+            updateBalance(totalWin);
+        }, 100);
+    }
+}
+
+Object.defineProperty(window, 'rich', {
+  get: function() {
+    updateBalance(100000 - balance);
+    console.log(`You are now rich! Your balance is ${balance} coins.`);
+    return balance;
+  }
+});
+
+    </script>
+</body>
+</html>

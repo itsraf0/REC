@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raf's Emoji Casino</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        /* Common styles */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Menu specific styles */
+        body.menu-page {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        .menu {
+            text-align: center;
+            padding: 2rem;
+            background-color: rgba(52, 73, 94, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            min-width: 600px;
+        }
+
+        .menu h1 {
+            color: #ecf0f1;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+        /* Game grid */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .game-card {
+            background: rgba(52, 73, 94, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            color: #ecf0f1;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .game-card:not(.coming-soon):hover {
+            background: #2c3e50;
+            border-color: #e74c3c;
+            transform: translateY(-5px);
+        }
+
+        .game-card h2 {
+            margin: 0 0 10px 0;
+            color: #e74c3c;
+        }
+
+        .game-card p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+
+        .coming-soon {
+            opacity: 0.7;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .coming-soon::after {
+            content: "Coming Soon";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(231, 76, 60, 0.9);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="menu-page">
+    <div class="menu">
+        <h1>🎰 Raf's Emoji Casino 🎲</h1>
+        <div class="game-grid">
+            <a href="slots/index.html" class="game-card">
+                <h2>🎰 Slots</h2>
+                <p>Classic slot machine game</p>
+            </a>
+            <a href="plinko/index.html" class="game-card">
+                <h2>🏐 Plinko</h2>
+                <p>Drop balls for big wins</p>
+            </a>
+            <a href="dice/index.html" class="game-card">
+                <h2>🎲 Dice</h2>
+                <p>Casual Dice game with powerups</p>
+            </a>
+            <a href="blackjack/index.html" class="game-card">
+                <h2>♠️ Blackjack</h2>
+                <p>Classic card game of 21</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

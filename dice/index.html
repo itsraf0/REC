@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REC - Dice</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <style>
+        /* Common styles */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Dice specific styles */
+        body.dice-page {
+            background-color: #2c3e50;
+        }
+
+        .dice-game {
+            background-color: #34495e;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 600px;
+        }
+
+        h1 {
+            color: #ecf0f1;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+        .stats {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            color: #ecf0f1;
+            margin-bottom: 20px;
+        }
+        
+        #lastWin {
+            margin-left: 1rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .dice {
+            width: 100px;
+            height: 100px;
+            background-color: #ecf0f1;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.5s ease;
+        }
+        
+        .rolling {
+            animation: roll 0.5s infinite;
+        }
+        
+        @keyframes roll {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(15deg); }
+            100% { transform: rotate(0deg); }
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 2rem;
+        }
+        
+        .bet-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .prediction-controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .prediction-btn {
+            font-family: 'Courier New', Courier, monospace;
+            padding: 0.5rem;
+            width: 45px;
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .prediction-btn.selected {
+            background-color: #3498db;
+        }
+        
+        .prediction-btn:hover:not(.selected) {
+            background-color: #95a5a6;
+        }
+        
+        button#rollButton {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            padding: 0.8rem 2rem;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 200px;
+        }
+        
+        button#rollButton:hover {
+            background-color: #c0392b;
+        }
+        
+        button#rollButton:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        #betAmount {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            width: 100px;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .powerups {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .powerup {
+            padding: 0.5rem 1rem;
+            background-color: #8e44ad;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            opacity: 0.7;
+        }
+        
+        .powerup:hover:not(:disabled) {
+            background-color: #9b59b6;
+            opacity: 1;
+        }
+        
+        .powerup:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .win { color: #2ecc71; }
+        .loss { color: #e74c3c; }
+        
+        .rules {
+            color: #ecf0f1;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            text-align: left;
+            padding: 1rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        .fade-out {
+            animation: fadeOut 4s forwards;
+        }
+        
+        /* Quick switch menu */
+        .quick-switch {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .quick-switch a {
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .quick-switch a:hover {
+            background: #c0392b;
+        }
+        
+        .quick-switch a.current {
+            background: #2c3e50;
+            cursor: default;
+        }
+        
+        .quick-switch a.current:hover {
+            background: #2c3e50;
+        }
+    </style>
+</head>
+<body class="dice-page">
+    <div class="dice-game">
+        <h1>🎲 Emoji Dice 🎲</h1>
+        <div class="stats">
+            <div>Balance: <span id="balance">100</span> 🪙 <span id="lastWin"></span></div>
+        </div>
+        
+        <div class="dice-container">
+            <div class="dice" id="dice1">⚀</div>
+            <div class="dice" id="dice2">⚁</div>
+        </div>
+        
+        <div class="controls">
+            <div class="bet-controls">
+                <input type="number" id="betAmount" value="10" min="1" max="100">
+                <button id="rollButton" onclick="rollDice()">Roll Dice!</button>
+            </div>
+            
+            <div>
+                <div>Your prediction:</div>
+                <div class="prediction-controls">
+                    <button class="prediction-btn" data-value="2">2</button>
+                    <button class="prediction-btn" data-value="3">3</button>
+                    <button class="prediction-btn" data-value="4">4</button>
+                    <button class="prediction-btn" data-value="5">5</button>
+                    <button class="prediction-btn" data-value="6">6</button>
+                    <button class="prediction-btn" data-value="7">7</button>
+                    <button class="prediction-btn" data-value="8">8</button>
+                    <button class="prediction-btn" data-value="9">9</button>
+                    <button class="prediction-btn" data-value="10">10</button>
+                    <button class="prediction-btn" data-value="11">11</button>
+                    <button class="prediction-btn" data-value="12">12</button>
+                </div>
+            </div>
+            
+            <div class="powerups">
+                <button class="powerup" id="luckyDice" title="Next roll has 2x payout" onclick="activatePowerup('lucky')">🍀 Lucky (25 🪙)</button>
+                <button class="powerup" id="guaranteedWin" title="Guarantees a win on next roll" onclick="activatePowerup('guaranteed')">✨ Magic (50 🪙)</button>
+                <button class="powerup" id="doubleDice" title="Roll one more time for free" onclick="activatePowerup('double')">🎯 Extra Roll (20 🪙)</button>
+            </div>
+        </div>
+        
+        <div class="rules">
+            <strong>Rules:</strong>
+            <br>- Select a number (2-12) that you predict will be the sum of the two dice
+            <br>- Win multipliers:
+            <br>&nbsp;&nbsp;• Numbers 2 and 12: 6x your bet
+            <br>&nbsp;&nbsp;• Numbers 3 and 11: 5x your bet
+            <br>&nbsp;&nbsp;• Numbers 4 and 10: 4x your bet
+            <br>&nbsp;&nbsp;• Numbers 5 and 9: 3x your bet
+            <br>&nbsp;&nbsp;• Numbers 6 and 8: 2x your bet
+            <br>&nbsp;&nbsp;• Number 7: 1.5x your bet
+            <br>- Powerups:
+            <br>&nbsp;&nbsp;• 🍀 Lucky: Next win pays 2x the usual amount
+            <br>&nbsp;&nbsp;• ✨ Magic: Next roll guarantees a win
+            <br>&nbsp;&nbsp;• 🎯 Extra Roll: Roll one more time for free
+        </div>
+    </div>
+    
+    <div class="quick-switch">
+        <a href="../" title="Back to menu">🏠 Menu</a>
+        <a href="../slots" title="Play Slots">🎰 Slots</a>
+        <a href="../plinko" title="Play Plinko">🏐 Plinko</a>
+        <a href="#" class="current" title="Play Dice">🎲 Dice</a>
+    </div>
+
+    <script>
+        let balance = 100;
+        let selectedNumber = null;
+        let isPowerupActive = {
+            lucky: false,
+            guaranteed: false,
+            double: false
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load balance from localStorage if available
+            const savedBalance = localStorage.getItem('diceBalance');
+            if (savedBalance) {
+                balance = parseInt(savedBalance);
+                updateBalance();
+            }
+            
+            // Add click handlers for prediction buttons
+            const predictionButtons = document.querySelectorAll('.prediction-btn');
+            predictionButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove selected class from all buttons
+                    predictionButtons.forEach(b => b.classList.remove('selected'));
+                    
+                    // Add selected class to clicked button
+                    this.classList.add('selected');
+                    
+                    // Store selected value
+                    selectedNumber = parseInt(this.dataset.value);
+                });
+            });
+            
+            updatePowerupButtons();
+        });
+        
+        function updateBalance() {
+            document.getElementById('balance').textContent = balance;
+            localStorage.setItem('diceBalance', balance);
+            updatePowerupButtons();
+        }
+        
+        function updatePowerupButtons() {
+            document.getElementById('luckyDice').disabled = balance < 25;
+            document.getElementById('guaranteedWin').disabled = balance < 50;
+            document.getElementById('doubleDice').disabled = balance < 20;
+        }
+        
+        function getMultiplier(number) {
+            if (number === 2 || number === 12) return 6;
+            if (number === 3 || number === 11) return 5;
+            if (number === 4 || number === 10) return 4;
+            if (number === 5 || number === 9) return 3;
+            if (number === 6 || number === 8) return 2;
+            if (number === 7) return 1.5;
+            return 0;
+        }
+        
+        function activatePowerup(type) {
+            if (type === 'lucky' && balance >= 25) {
+                balance -= 25;
+                isPowerupActive.lucky = true;
+                document.getElementById('luckyDice').style.opacity = '1';
+                showWinMessage("Lucky powerup activated! 🍀", "win");
+            } else if (type === 'guaranteed' && balance >= 50) {
+                balance -= 50;
+                isPowerupActive.guaranteed = true;
+                document.getElementById('guaranteedWin').style.opacity = '1';
+                showWinMessage("Magic powerup activated! ✨", "win");
+            } else if (type === 'double' && balance >= 20) {
+                balance -= 20;
+                isPowerupActive.double = true;
+                document.getElementById('doubleDice').style.opacity = '1';
+                showWinMessage("Extra Roll powerup activated! 🎯", "win");
+            }
+            
+            updateBalance();
+        }
+        
+        function rollDice() {
+            // Check if a prediction was made
+            if (selectedNumber === null) {
+                showWinMessage("Please select a number first!", "loss");
+                return;
+            }
+            
+            // Get bet amount
+            const betInput = document.getElementById('betAmount');
+            const betAmount = parseInt(betInput.value);
+            
+            // Validate bet
+            if (isNaN(betAmount) || betAmount < 1) {
+                showWinMessage("Please enter a valid bet!", "loss");
+                return;
+            }
+            
+            if (betAmount > balance) {
+                showWinMessage("Not enough coins!", "loss");
+                return;
+            }
+            
+            // Deduct bet from balance
+            balance -= betAmount;
+            updateBalance();
+            
+            // Disable roll button during animation
+            const rollButton = document.getElementById('rollButton');
+            rollButton.disabled = true;
+            
+            // Animate dice
+            const dice1 = document.getElementById('dice1');
+            const dice2 = document.getElementById('dice2');
+            
+            dice1.classList.add('rolling');
+            dice2.classList.add('rolling');
+            
+            // Determine dice values (rigged if guaranteed powerup is active)
+            let die1Value, die2Value, total;
+            
+            if (isPowerupActive.guaranteed) {
+                // Rig the dice to match the selected number
+                if (selectedNumber <= 7) {
+                    die1Value = 1;
+                    die2Value = selectedNumber - 1;
+                } else {
+                    die1Value = selectedNumber - 6;
+                    die2Value = 6;
+                }
+                
+                if (die1Value < 1) die1Value = 1;
+                if (die1Value > 6) die1Value = 6;
+                if (die2Value < 1) die2Value = 1;
+                if (die2Value > 6) die2Value = 6;
+                
+                total = die1Value + die2Value;
+                
+                // If we couldn't make exact match (shouldn't happen), pick random values but ensure they sum to selected
+                if (total !== selectedNumber) {
+                    console.log("Couldn't rig exactly, finding closest match");
+                    // Find valid combinations
+                    const combos = [];
+                    for (let i = 1; i <= 6; i++) {
+                        for (let j = 1; j <= 6; j++) {
+                            if (i + j === selectedNumber) {
+                                combos.push([i, j]);
+                            }
+                        }
+                    }
+                    
+                    if (combos.length > 0) {
+                        // Pick a random valid combination
+                        const combo = combos[Math.floor(Math.random() * combos.length)];
+                        die1Value = combo[0];
+                        die2Value = combo[1];
+                        total = die1Value + die2Value;
+                    }
+                }
+                
+                isPowerupActive.guaranteed = false;
+                document.getElementById('guaranteedWin').style.opacity = '0.7';
+            } else {
+                // Random dice values
+                die1Value = Math.floor(Math.random() * 6) + 1;
+                die2Value = Math.floor(Math.random() * 6) + 1;
+                total = die1Value + die2Value;
+            }
+            
+            // Set dice face unicode
+            const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+            
+            setTimeout(() => {
+                dice1.textContent = diceFaces[die1Value - 1];
+                dice2.textContent = diceFaces[die2Value - 1];
+                
+                dice1.classList.remove('rolling');
+                dice2.classList.remove('rolling');
+                
+                // Check win
+                if (total === selectedNumber) {
+                    // Calculate winnings
+                    let multiplier = getMultiplier(selectedNumber);
+                    
+                    // Apply lucky powerup
+                    if (isPowerupActive.lucky) {
+                        multiplier *= 2;
+                        isPowerupActive.lucky = false;
+                        document.getElementById('luckyDice').style.opacity = '0.7';
+                    }
+                    
+                    const winnings = Math.floor(betAmount * multiplier);
+                    balance += winnings;
+                    
+                    // Show win message
+                    showWinMessage(`You won ${winnings} 🪙!`, "win");
+                } else {
+                    showWinMessage(`You lost! The dice rolled ${total}`, "loss");
+                }
+                
+                updateBalance();
+                
+                // Handle extra roll powerup
+                if (isPowerupActive.double) {
+                    isPowerupActive.double = false;
+                    document.getElementById('doubleDice').style.opacity = '0.7';
+                    
+                    // Show message
+                    setTimeout(() => {
+                        showWinMessage("Using Extra Roll powerup!", "win");
+                        
+                        // Roll again after delay
+                        setTimeout(() => {
+                            rollDice();
+                        }, 1000);
+                    }, 1500);
+                } else {
+                    // Re-enable roll button
+                    rollButton.disabled = false;
+                }
+            }, 1000);
+        }
+        
+        function showWinMessage(message, type) {
+            const winDisplay = document.getElementById('lastWin');
+            winDisplay.textContent = message;
+            winDisplay.className = type;
+            winDisplay.style.opacity = 1;
+            
+            // Clear previous animation
+            winDisplay.classList.remove('fade-out');
+            void winDisplay.offsetWidth; // Force reflow
+            winDisplay.classList.add('fade-out');
+        }
+    </script>
+</body>
+</html> 

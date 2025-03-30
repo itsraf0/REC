@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REC - Blackjack</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <style>
+        /* Common styles */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Blackjack specific styles */
+        body.blackjack-page {
+            background-color: #2c3e50;
+        }
+
+        .blackjack-game {
+            background-color: #34495e;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 600px;
+        }
+
+        h1 {
+            color: #ecf0f1;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+        .stats {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            color: #ecf0f1;
+            margin-bottom: 20px;
+        }
+        
+        #lastWin {
+            margin-left: 1rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .player-area, .dealer-area {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        .area-label {
+            color: #ecf0f1;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            min-height: 120px;
+        }
+
+        .card {
+            width: 80px;
+            height: 120px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .card-content {
+            font-size: 2rem;
+            position: absolute;
+        }
+
+        .card-content.top-left {
+            top: 5px;
+            left: 10px;
+        }
+
+        .card-content.bottom-right {
+            bottom: 5px;
+            right: 10px;
+            transform: rotate(180deg);
+        }
+
+        .card-suit {
+            font-size: 2.5rem;
+        }
+
+        .card.red {
+            color: #e74c3c;
+        }
+
+        .card.black {
+            color: #2c3e50;
+        }
+
+        .card.hidden {
+            background-image: linear-gradient(45deg, #e74c3c 25%, transparent 25%), 
+                              linear-gradient(-45deg, #e74c3c 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #e74c3c 75%), 
+                              linear-gradient(-45deg, transparent 75%, #e74c3c 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        .score-display {
+            color: #ecf0f1;
+            margin-top: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 2rem;
+        }
+        
+        .bet-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .action-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        button {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            padding: 0.8rem 1.5rem;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover:not(:disabled) {
+            background-color: #c0392b;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        #betAmount {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            width: 100px;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .powerups {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .powerup {
+            padding: 0.5rem 1rem;
+            background-color: #8e44ad;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            opacity: 0.7;
+        }
+        
+        .powerup:hover:not(:disabled) {
+            background-color: #9b59b6;
+            opacity: 1;
+        }
+        
+        .powerup:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .win { color: #2ecc71; }
+        .loss { color: #e74c3c; }
+        
+        .rules {
+            color: #ecf0f1;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            text-align: left;
+            padding: 1rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        .fade-out {
+            animation: fadeOut 4s forwards;
+        }
+        
+        /* Quick switch menu */
+        .quick-switch {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .quick-switch a {
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .quick-switch a:hover {
+            background: #c0392b;
+        }
+        
+        .quick-switch a.current {
+            background: #2c3e50;
+            cursor: default;
+        }
+        
+        .quick-switch a.current:hover {
+            background: #2c3e50;
+        }
+
+        /* Animation for card dealing */
+        @keyframes dealCard {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .dealing {
+            animation: dealCard 0.3s forwards;
+        }
+    </style>
+</head>
+<body class="blackjack-page">
+    <div class="blackjack-game">
+        <h1>♠️ Emoji Blackjack ♥️</h1>
+        <div class="stats">
+            <div>Balance: <span id="balance">100</span> 🪙 <span id="lastWin"></span></div>
+        </div>
+        
+        <div class="game-area">
+            <div class="dealer-area">
+                <div class="area-label">Dealer's Hand</div>
+                <div class="cards" id="dealerCards"></div>
+                <div class="score-display">Score: <span id="dealerScore">0</span></div>
+            </div>
+            
+            <div class="player-area">
+                <div class="area-label">Your Hand</div>
+                <div class="cards" id="playerCards"></div>
+                <div class="score-display">Score: <span id="playerScore">0</span></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="bet-controls">
+                <input type="number" id="betAmount" value="10" min="1" max="100">
+                <button id="dealButton">Deal Cards</button>
+            </div>
+            
+            <div class="action-controls" id="actionControls" style="display: none;">
+                <button id="hitButton">Hit</button>
+                <button id="standButton">Stand</button>
+                <button id="doubleButton">Double Down</button>
+            </div>
+            
+            <div class="powerups">
+                <button class="powerup" id="peekPowerup" title="Peek at dealer's hidden card" onclick="activatePowerup('peek')">👁️ Peek (15 🪙)</button>
+                <button class="powerup" id="insurancePowerup" title="Get 1:1 payout if dealer has blackjack" onclick="activatePowerup('insurance')">🛡️ Insurance (10 🪙)</button>
+                <button class="powerup" id="perfectPowerup" title="Next blackjack pays 3:1 instead of 3:2" onclick="activatePowerup('perfect')">✨ Perfect (20 🪙)</button>
+            </div>
+        </div>
+        
+        <div class="rules">
+            <strong>Rules:</strong>
+            <br>- Try to get as close to 21 as possible without going over
+            <br>- Number cards are worth their face value
+            <br>- Face cards (J, Q, K) are worth 10
+            <br>- Aces are worth 1 or 11, whichever is more favorable
+            <br>- Dealer must stand on 17 or higher
+            <br>- Blackjack (A + 10/J/Q/K) pays 3:2
+            <br>- Win by having a higher score than the dealer without busting
+            <br>- Powerups:
+            <br>&nbsp;&nbsp;• 👁️ Peek: See the dealer's hidden card
+            <br>&nbsp;&nbsp;• 🛡️ Insurance: Get 1:1 payout if dealer has blackjack
+            <br>&nbsp;&nbsp;• ✨ Perfect: Next blackjack pays 3:1 instead of 3:2
+        </div>
+    </div>
+    
+    <div class="quick-switch">
+        <a href="../" title="Back to menu">🏠 Menu</a>
+        <a href="../slots" title="Play Slots">🎰 Slots</a>
+        <a href="../plinko" title="Play Plinko">🏐 Plinko</a>
+        <a href="../dice" title="Play Dice">🎲 Dice</a>
+        <a href="#" class="current" title="Play Blackjack">♠️ Blackjack</a>
+    </div>
+
+    <script>
+        let balance = 100;
+        let deck = [];
+        let playerHand = [];
+        let dealerHand = [];
+        let currentBet = 0;
+        let gameInProgress = false;
+        let isPowerupActive = {
+            peek: false,
+            insurance: false,
+            perfect: false
+        };
+        
+        // Card suits and values
+        const suits = ['♠️', '♥️', '♦️', '♣️'];
+        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load balance from localStorage if available
+            const savedBalance = localStorage.getItem('blackjackBalance');
+            if (savedBalance) {
+                balance = parseInt(savedBalance);
+                updateBalance();
+            }
+            
+            // Add event listeners
+            document.getElementById('dealButton').addEventListener('click', startGame);
+            document.getElementById('hitButton').addEventListener('click', playerHit);
+            document.getElementById('standButton').addEventListener('click', playerStand);
+            document.getElementById('doubleButton').addEventListener('click', playerDoubleDown);
+            
+            updatePowerupButtons();
+        });
+        
+        function updateBalance() {
+            document.getElementById('balance').textContent = balance;
+            localStorage.setItem('blackjackBalance', balance);
+            updatePowerupButtons();
+        }
+        
+        function updatePowerupButtons() {
+            document.getElementById('peekPowerup').disabled = balance < 15 || gameInProgress;
+            document.getElementById('insurancePowerup').disabled = balance < 10 || gameInProgress;
+            document.getElementById('perfectPowerup').disabled = balance < 20 || gameInProgress;
+        }
+        
+        function createDeck() {
+            const newDeck = [];
+            for (let suit of suits) {
+                for (let value of values) {
+                    newDeck.push({ value, suit });
+                }
+            }
+            return newDeck;
+        }
+        
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+        
+        function getCardValue(card) {
+            if (['J', 'Q', 'K'].includes(card.value)) return 10;
+            if (card.value === 'A') return 11;
+            return parseInt(card.value);
+        }
+        
+        function calculateHandValue(hand) {
+            let value = 0;
+            let aces = 0;
+            
+            for (let card of hand) {
+                if (card.value === 'A') {
+                    aces += 1;
+                    value += 11;
+                } else {
+                    value += getCardValue(card);
+                }
+            }
+            
+            // Adjust for aces
+            while (value > 21 && aces > 0) {
+                value -= 10;
+                aces -= 1;
+            }
+            
+            return value;
+        }
+        
+        function isBlackjack(hand) {
+            return hand.length === 2 && calculateHandValue(hand) === 21;
+        }
+        
+        function createCardElement(card, hidden = false) {
+            const cardElement = document.createElement('div');
+            cardElement.className = 'card dealing';
+            
+            if (hidden) {
+                cardElement.classList.add('hidden');
+                return cardElement;
+            }
+            
+            const isRed = card.suit === '♥️' || card.suit === '♦️';
+            cardElement.classList.add(isRed ? 'red' : 'black');
+            
+            // Add top-left value and suit
+            const topLeft = document.createElement('div');
+            topLeft.className = 'card-content top-left';
+            topLeft.textContent = card.value;
+            cardElement.appendChild(topLeft);
+            
+            // Add center suit
+            const suitElement = document.createElement('div');
+            suitElement.className = 'card-suit';
+            suitElement.textContent = card.suit;
+            cardElement.appendChild(suitElement);
+            
+            // Add bottom-right value and suit
+            const bottomRight = document.createElement('div');
+            bottomRight.className = 'card-content bottom-right';
+            bottomRight.textContent = card.value;
+            cardElement.appendChild(bottomRight);
+            
+            return cardElement;
+        }
+        
+        function updateScoreDisplay() {
+            document.getElementById('playerScore').textContent = calculateHandValue(playerHand);
+            
+            // Only show dealer's score based on visible cards
+            const visibleDealerCards = dealerHand.filter((_, index) => index !== 1 || !document.querySelector('#dealerCards .card.hidden'));
+            document.getElementById('dealerScore').textContent = calculateHandValue(visibleDealerCards);
+        }
+        
+        function drawCard() {
+            if (deck.length === 0) {
+                deck = shuffleDeck(createDeck());
+            }
+            return deck.pop();
+        }
+        
+        function startGame() {
+            // Get bet amount
+            const betInput = document.getElementById('betAmount');
+            const betAmount = parseInt(betInput.value);
+            
+            // Validate bet
+            if (isNaN(betAmount) || betAmount < 1) {
+                showMessage("Please enter a valid bet!", "loss");
+                return;
+            }
+            
+            if (betAmount > balance) {
+                showMessage("Not enough coins!", "loss");
+                return;
+            }
+            
+            // Deduct bet from balance
+            balance -= betAmount;
+            currentBet = betAmount;
+            updateBalance();
+            
+            // Reset the game
+            gameInProgress = true;
+            playerHand = [];
+            dealerHand = [];
+            
+            // Clear cards
+            document.getElementById('playerCards').innerHTML = '';
+            document.getElementById('dealerCards').innerHTML = '';
+            
+            // Create and shuffle deck
+            deck = shuffleDeck(createDeck());
+            
+            // Deal initial cards
+            dealInitialCards();
+            
+            // Update UI
+            document.getElementById('dealButton').disabled = true;
+            document.getElementById('actionControls').style.display = 'flex';
+            
+            // Check for blackjack
+            if (isBlackjack(playerHand)) {
+                setTimeout(() => {
+                    revealDealerCards();
+                    
+                    if (isBlackjack(dealerHand)) {
+                        // Both have blackjack - push
+                        balance += currentBet;
+                        showMessage("Push! Both have blackjack.", "win");
+                    } else {
+                        // Player has blackjack
+                        const multiplier = isPowerupActive.perfect ? 3 : 1.5;
+                        const winnings = Math.floor(currentBet * (1 + multiplier));
+                        balance += winnings;
+                        
+                        if (isPowerupActive.perfect) {
+                            showMessage(`Perfect Blackjack! You won ${winnings} 🪙!`, "win");
+                            isPowerupActive.perfect = false;
+                        } else {
+                            showMessage(`Blackjack! You won ${winnings} 🪙!`, "win");
+                        }
+                    }
+                    
+                    endGame();
+                }, 1000);
+            } else {
+                // Check if dealer has an Ace showing
+                if (dealerHand[0].value === 'A' && isPowerupActive.insurance) {
+                    // Check if dealer has blackjack
+                    if (calculateHandValue(dealerHand) === 21) {
+                        // Insurance pays 1:1
+                        balance += currentBet;
+                        showMessage("Insurance paid out! Dealer has blackjack.", "win");
+                    } else {
+                        showMessage("Dealer doesn't have blackjack. Insurance lost.", "loss");
+                    }
+                    isPowerupActive.insurance = false;
+                }
+                
+                // Enable double down only if player has enough balance
+                document.getElementById('doubleButton').disabled = balance < currentBet;
+            }
+        }
+        
+        function dealInitialCards() {
+            // Deal first card to player
+            const playerCard1 = drawCard();
+            playerHand.push(playerCard1);
+            document.getElementById('playerCards').appendChild(createCardElement(playerCard1));
+            
+            // Deal first card to dealer (face up)
+            const dealerCard1 = drawCard();
+            dealerHand.push(dealerCard1);
+            document.getElementById('dealerCards').appendChild(createCardElement(dealerCard1));
+            
+            // Deal second card to player
+            const playerCard2 = drawCard();
+            playerHand.push(playerCard2);
+            document.getElementById('playerCards').appendChild(createCardElement(playerCard2));
+            
+            // Deal second card to dealer (face down)
+            const dealerCard2 = drawCard();
+            dealerHand.push(dealerCard2);
+            
+            // If peek powerup is active, show the card to the player
+            if (isPowerupActive.peek) {
+                document.getElementById('dealerCards').appendChild(createCardElement(dealerCard2));
+                showMessage("You peeked at the dealer's card!", "win");
+                isPowerupActive.peek = false;
+            } else {
+                document.getElementById('dealerCards').appendChild(createCardElement(dealerCard2, true));
+            }
+            
+            updateScoreDisplay();
+        }
+        
+        function playerHit() {
+            // Draw a new card
+            const card = drawCard();
+            playerHand.push(card);
+            
+            // Add card to player's hand
+            document.getElementById('playerCards').appendChild(createCardElement(card));
+            
+            // Update score
+            updateScoreDisplay();
+            
+            // Check if player busts
+            if (calculateHandValue(playerHand) > 21) {
+                showMessage("Bust! You went over 21.", "loss");
+                endGame();
+            }
+            
+            // Disable double down after hitting
+            document.getElementById('doubleButton').disabled = true;
+        }
+        
+        function playerStand() {
+            // Dealer's turn
+            dealerPlay();
+        }
+        
+        function playerDoubleDown() {
+            // Double the bet
+            balance -= currentBet;
+            currentBet *= 2;
+            updateBalance();
+            
+            // Draw one card
+            playerHit();
+            
+            // If not bust, dealer plays
+            if (calculateHandValue(playerHand) <= 21) {
+                dealerPlay();
+            }
+        }
+        
+        function dealerPlay() {
+            // Reveal dealer's hidden card
+            revealDealerCards();
+            
+            // Dealer draws until 17 or higher
+            let dealerValue = calculateHandValue(dealerHand);
+            
+            const drawDealerCard = () => {
+                if (dealerValue < 17) {
+                    setTimeout(() => {
+                        const card = drawCard();
+                        dealerHand.push(card);
+                        document.getElementById('dealerCards').appendChild(createCardElement(card));
+                        updateScoreDisplay();
+                        
+                        dealerValue = calculateHandValue(dealerHand);
+                        drawDealerCard();
+                    }, 500);
+                } else {
+                    // Determine winner
+                    determineWinner();
+                }
+            };
+            
+            drawDealerCard();
+        }
+        
+        function revealDealerCards() {
+            // Replace the hidden card with the actual card
+            const dealerCardsContainer = document.getElementById('dealerCards');
+            dealerCardsContainer.innerHTML = '';
+            
+            // Re-add all dealer cards face up
+            for (let card of dealerHand) {
+                dealerCardsContainer.appendChild(createCardElement(card));
+            }
+            
+            updateScoreDisplay();
+        }
+        
+        function determineWinner() {
+            const playerValue = calculateHandValue(playerHand);
+            const dealerValue = calculateHandValue(dealerHand);
+            
+            // If player busted, dealer wins
+            if (playerValue > 21) {
+                showMessage("Bust! You went over 21.", "loss");
+            } 
+            // If dealer busted, player wins
+            else if (dealerValue > 21) {
+                const winnings = currentBet * 2;
+                balance += winnings;
+                showMessage(`Dealer busts! You won ${winnings} 🪙!`, "win");
+            } 
+            // Compare values
+            else if (playerValue > dealerValue) {
+                const winnings = currentBet * 2;
+                balance += winnings;
+                showMessage(`You won ${winnings} 🪙!`, "win");
+            } 
+            else if (playerValue < dealerValue) {
+                showMessage("Dealer wins!", "loss");
+            } 
+            else {
+                // Push - return bet
+                balance += currentBet;
+                showMessage("Push! It's a tie.", "win");
+            }
+            
+            endGame();
+        }
+        
+        function endGame() {
+            gameInProgress = false;
+            currentBet = 0;
+            
+            // Update UI
+            document.getElementById('dealButton').disabled = false;
+            document.getElementById('actionControls').style.display = 'none';
+            updateBalance();
+            updatePowerupButtons();
+        }
+        
+        function activatePowerup(type) {
+            if (gameInProgress) {
+                showMessage("Can't use powerups during a game!", "loss");
+                return;
+            }
+            
+            if (type === 'peek' && balance >= 15) {
+                balance -= 15;
+                isPowerupActive.peek = true;
+                document.getElementById('peekPowerup').style.opacity = '1';
+                showMessage("Peek powerup activated! 👁️", "win");
+            } else if (type === 'insurance' && balance >= 10) {
+                balance -= 10;
+                isPowerupActive.insurance = true;
+                document.getElementById('insurancePowerup').style.opacity = '1';
+                showMessage("Insurance powerup activated! 🛡️", "win");
+            } else if (type === 'perfect' && balance >= 20) {
+                balance -= 20;
+                isPowerupActive.perfect = true;
+                document.getElementById('perfectPowerup').style.opacity = '1';
+                showMessage("Perfect Blackjack powerup activated! ✨", "win");
+            }
+            
+            updateBalance();
+        }
+        
+        function showMessage(message, type) {
+            const msgDisplay = document.getElementById('lastWin');
+            msgDisplay.textContent = message;
+            msgDisplay.className = type;
+            msgDisplay.style.opacity = 1;
+            
+            // Clear previous animation
+            msgDisplay.classList.remove('fade-out');
+            void msgDisplay.offsetWidth; // Force reflow
+            msgDisplay.classList.add('fade-out');
+        }
+    </script>
+</body>
+</html> 

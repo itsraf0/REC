@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REC - Plinko</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <style>
+        /* Common styles */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Plinko specific styles */
+        body.plinko-page {
+            background-color: #2c3e50;
+        }
+
+        .plinko-machine {
+            background-color: #34495e;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .plinko-machine h1 {
+            margin-top: 0;
+        }
+
+        #plinkoCanvas {
+            background-color: #2c3e50;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Game container and settings */
+        .game-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .game-settings {
+            background: rgba(44, 62, 80, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            color: #ecf0f1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Common elements */
+        h1 {
+            color: #ecf0f1;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+        .stats {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        /* Controls */
+        .bet-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bet-controls h3 {
+            margin: 0;
+            color: #e74c3c;
+        }
+
+        .bet-controls input {
+            padding: 8px;
+            border-radius: 5px;
+            background: #34495e;
+            color: #ecf0f1;
+            border: 1px solid #e74c3c;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #dropButton {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            padding: 0.8rem 2rem;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        #dropButton:hover {
+            background-color: #c0392b;
+        }
+
+        #dropButton:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Risk selector */
+        .risk-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .risk-selector h3 {
+            margin: 0;
+            color: #e74c3c;
+        }
+
+        .risk-selector select {
+            padding: 8px;
+            border-radius: 5px;
+            background: #34495e;
+            color: #ecf0f1;
+            border: 1px solid #e74c3c;
+            cursor: pointer;
+        }
+
+        .risk-selector select:hover {
+            background: #2c3e50;
+        }
+
+        .risk-description {
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+
+        .risk-description p {
+            margin: 5px 0;
+        }
+
+        /* Quick switch menu */
+        .quick-switch {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quick-switch a {
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-switch a:hover {
+            background: #c0392b;
+        }
+
+        .quick-switch a.current {
+            background: #2c3e50;
+            cursor: default;
+        }
+
+        .quick-switch a.current:hover {
+            background: #2c3e50;
+        }
+        #lastWin {
+            margin-left: 1rem;
+            font-weight: bold;
+        }
+
+        .win {
+            color: #2ecc71;
+        }
+
+        .loss {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body class="plinko-page">
+    <div class="game-container">
+        <div class="plinko-machine">
+            <h1>🎱 Emoji Plinko 🎮</h1>
+            <canvas id="plinkoCanvas"></canvas>
+        </div>
+        <div class="game-settings">
+            <div class="stats">
+                Balance: <span id="balance">1000</span> 🪙
+                <span id="lastWin"></span>
+            </div>
+            <div class="bet-controls">
+                <h3>🪙 Bet Amount</h3>
+                <input type="number" id="betAmount" min="1" value="10" step="1">
+                <button id="dropButton">🎯 Drop Ball</button>
+            </div>
+            <div class="risk-selector">
+                <h3>⚡️ Risk Level</h3>
+                <select id="riskSelector">
+                    <option value="low">🟢 Low Risk</option>
+                    <option value="mid">🟡 Medium Risk</option>
+                    <option value="high">🔴 High Risk</option>
+                </select>
+                <div class="risk-description">
+                    <p>🟢 Low: More consistent payouts</p>
+                    <p>🟡 Medium: Higher variance</p>
+                    <p>🔴 High: Extreme variance</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="quick-switch">
+        <a href="../index.html">🏠 Home</a>
+        <a href="../slots">🎰 Slots</a>
+        <a href="index.html" class="current">🎱 Plinko</a>
+    </div>
+    <script>
+    
+    class PlinkoGame {
+        constructor() {
+            //configuration
+            this.config = {
+                barrierOffset: 30,       // Distance of barriers from triangle edges
+                dampening: 0.7,          // Energy retention after collisions
+                gravity: 0.7,            // Gravity force
+                friction: 0.99,          // Friction coefficient
+                pinBounceRandomness: 2,  // Maximum random bounce effect from pins
+                maxBalls: 100,           // Maximum balls allowed in play
+                enableButton: 5,         // Re-enable drop button when balls below this
+                centerPull: 0,       // Center pull force
+                speedMultiplier: 1       // Global speed multiplier for balls
+            };
+    
+            this.riskMultipliers = {
+                low: [6, 3, 1.1, 0.8, 0.5, 0.8, 1.1, 3, 6],
+                mid: [12, 4, 1, 0.5, 0.3, 0.5, 1, 4, 12],
+                high: [43, 7, 1, 0.5, 0.2, 0.5, 1, 7, 43]
+            };
+    
+            this.dimensions = {
+                width: 500,
+                height: 550,
+                pinRadius: 6,
+                ballRadius: 12,
+                rows: 10,
+                spacing: 50
+            };
+    
+            this.emojis = {
+                ball: ['🎱', '⚾️', '🏀', '⚽️', '🎾', '🏐', '🧶'],
+                win: ['🎉', '💫', '✨', '🌟', '💎'],
+                lose: ['💨', '🌪️', '💭']
+            };
+    
+            this.canvas = document.getElementById('plinkoCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.canvas.width = this.dimensions.width;
+            this.canvas.height = this.dimensions.height;
+            this.pins = [];
+            this.balls = [];
+            this.currentRisk = 'low';
+            this.multipliers = this.riskMultipliers[this.currentRisk];
+            this.slots = [];
+            this.balance = this.getBalance();
+            this.setupGame();
+            this.setupEventListeners();
+            this.gameLoop();
+        }
+    
+        setupGame() {
+            const startX = this.canvas.width / 2;
+            const gridHeight = (this.dimensions.rows - 1) * this.dimensions.spacing;
+            const startY = (this.canvas.height - gridHeight) / 2;
+    
+            this.triangleBounds = {
+                top: startY,
+                bottom: startY + gridHeight,
+                getWidthAtY: (y) => {
+                    const rowIndex = (y - startY) / this.dimensions.spacing;
+                    return rowIndex * this.dimensions.spacing;
+                },
+                centerX: startX
+            };
+    
+            this.bottomRowPins = [];
+    
+            for (let row = 0; row < this.dimensions.rows; row++) {
+                for (let pin = 0; pin <= row; pin++) {
+                    if (row === 0 && pin === 0) continue;
+                    
+                    const x = startX - (row * this.dimensions.spacing) / 2 + pin * this.dimensions.spacing;
+                    const y = startY + row * this.dimensions.spacing;
+                    
+                    if (row === this.dimensions.rows - 1) {
+                        this.bottomRowPins.push({ x, y });
+                    }
+                    this.pins.push({ x, y });
+                }
+            }
+    
+            this.slots = [];
+            for (let i = 0; i < this.bottomRowPins.length - 1; i++) {
+                const x = (this.bottomRowPins[i].x + this.bottomRowPins[i + 1].x) / 2;
+                this.slots.push({
+                    x: x,
+                    multiplier: this.multipliers[i]
+                });
+            }
+        }
+    
+        setupEventListeners() {
+            const dropButton = document.getElementById('dropButton');
+            dropButton.addEventListener('click', () => this.dropBall());
+    
+            document.addEventListener('keydown', (event) => {
+                if (event.code === 'Space' && !event.repeat) {
+                    event.preventDefault();
+                    if (!document.getElementById('dropButton').disabled) {
+                        this.dropBall();
+                    }
+                }
+            });
+    
+            const riskSelector = document.getElementById('riskSelector');
+            if (riskSelector) {
+                riskSelector.addEventListener('change', (e) => {
+                    this.currentRisk = e.target.value;
+                    this.multipliers = this.riskMultipliers[this.currentRisk];
+                    for (let i = 0; i < this.slots.length; i++) {
+                        this.slots[i].multiplier = this.multipliers[i];
+                    }
+                });
+            }
+    
+            document.getElementById('balance').textContent = this.balance;
+        }
+    
+        setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+        }
+    
+        getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+    
+        getBalance() {
+            return parseInt(this.getCookie('gameBalance')) || 1000;
+        }
+    
+        updateBalance(newBalance) {
+            this.balance = newBalance
+            document.getElementById('balance').textContent = Math.floor(this.balance);
+            this.setCookie('gameBalance', this.balance, 30);
+        }
+    
+        dropBall() {
+            let betAmount = parseInt(document.getElementById('betAmount').value);
+            
+            if (isNaN(betAmount) || betAmount <= 0) return;
+    
+            if (betAmount > this.balance) {
+                betAmount = this.balance;
+                document.getElementById('betAmount').value = betAmount;
+            }
+            
+            this.updateBalance(this.balance - betAmount);
+            
+            if (this.balls.length >= this.config.maxBalls) {
+                document.getElementById('dropButton').disabled = true;
+            }
+    
+            const ball = {
+                x: this.canvas.width / 2 + (Math.random() - 0.5) * 20,
+                y: 50,
+                velocity: { x: 0, y: 0 },
+                betAmount: betAmount,
+                emoji: this.emojis.ball[Math.floor(Math.random() * this.emojis.ball.length)]
+            };
+            this.balls.push(ball);
+        }
+    
+        update() {
+            for (let i = this.balls.length - 1; i >= 0; i--) {
+                const ball = this.balls[i];
+                
+                const prevX = ball.x;
+                const prevY = ball.y;
+                ball.velocity.y += this.config.gravity;
+                
+                const centerX = this.canvas.width / 2;
+                const pullForce = (centerX - ball.x) * this.config.centerPull;
+                ball.velocity.x += pullForce;
+                
+                ball.velocity.x *= this.config.speedMultiplier;
+                ball.velocity.y *= this.config.speedMultiplier;
+                
+                ball.x += ball.velocity.x;
+                ball.y += ball.velocity.y;
+                
+                const startX = this.canvas.width / 2;
+                const gridHeight = (this.dimensions.rows - 1) * this.dimensions.spacing;
+                const startY = (this.canvas.height - gridHeight) / 2;
+                const maxWidth = (this.dimensions.rows - 1) * this.dimensions.spacing;
+    
+                const leftBarrierStart = { x: startX - this.config.barrierOffset, y: startY - this.config.barrierOffset };
+                const leftBarrierEnd = { 
+                    x: startX - (maxWidth / 2) - this.config.barrierOffset, 
+                    y: startY + gridHeight - this.config.barrierOffset 
+                };
+                const rightBarrierStart = { x: startX + this.config.barrierOffset, y: startY - this.config.barrierOffset };
+                const rightBarrierEnd = { 
+                    x: startX + (maxWidth / 2) + this.config.barrierOffset, 
+                    y: startY + gridHeight - this.config.barrierOffset 
+                };
+    
+                if (this.lineCircleCollision(
+                    leftBarrierStart, leftBarrierEnd,
+                    ball.x, ball.y, this.dimensions.ballRadius
+                )) {
+                    const angle = Math.atan2(
+                        leftBarrierEnd.y - leftBarrierStart.y,
+                        leftBarrierEnd.x - leftBarrierStart.x
+                    );
+                    const normalAngle = angle + Math.PI / 2;
+                    this.bounceOffLine(ball, normalAngle);
+                }
+    
+                if (this.lineCircleCollision(
+                    rightBarrierStart, rightBarrierEnd,
+                    ball.x, ball.y, this.dimensions.ballRadius
+                )) {
+                    const angle = Math.atan2(
+                        rightBarrierEnd.y - rightBarrierStart.y,
+                        rightBarrierEnd.x - rightBarrierStart.x
+                    );
+                    const normalAngle = angle - Math.PI / 2;
+                    this.bounceOffLine(ball, normalAngle);
+                }
+                
+                if (ball.x < this.dimensions.ballRadius || ball.x > this.canvas.width - this.dimensions.ballRadius) {
+                    if (!ball.invalid) {
+                        ball.invalid = true;
+                        ball.betAmount = 0;
+                    }
+                    
+                    if (ball.x < this.dimensions.ballRadius) {
+                        ball.x = this.dimensions.ballRadius;
+                        ball.velocity.x = Math.abs(ball.velocity.x) * 0.8;
+                    } else {
+                        ball.x = this.canvas.width - this.dimensions.ballRadius;
+                        ball.velocity.x = -Math.abs(ball.velocity.x) * 0.8;
+                    }
+                }
+    
+                if (ball.y < this.dimensions.ballRadius) {
+                    ball.y = this.dimensions.ballRadius;
+                    ball.velocity.y = Math.abs(ball.velocity.y) * 0.5;
+                }
+    
+                for (let pin of this.pins) {
+                    const dx = ball.x - pin.x;
+                    const dy = ball.y - pin.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+                    if (distance < this.dimensions.ballRadius + this.dimensions.pinRadius) {
+                        const angle = Math.atan2(dy, dx);
+                        const speed = Math.sqrt(ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y);
+                        ball.velocity.x = Math.cos(angle) * speed * 0.8;
+                        ball.velocity.y = Math.sin(angle) * speed * 0.8;
+                        
+                        ball.velocity.x += (Math.random() - 0.5) * this.config.pinBounceRandomness;
+                    }
+                }
+    
+                ball.velocity.x *= this.config.friction;
+                ball.velocity.y *= this.config.friction;
+    
+                if (ball.y > this.canvas.height - this.dimensions.ballRadius) {
+                    let closestSlot = 0;
+                    let minDistance = Infinity;
+                    
+                    for (let i = 0; i < this.slots.length; i++) {
+                        const distance = Math.abs(ball.x - this.slots[i].x);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestSlot = i;
+                        }
+                    }
+    
+                    const maxAllowedDistance = this.dimensions.spacing / 2;
+                    if (minDistance > maxAllowedDistance) {
+                        this.updateWinDisplay(0, true);
+                    } else {
+                        const multiplier = this.multipliers[closestSlot];
+                        const winAmount = ball.betAmount * multiplier;
+                        this.updateBalance(this.balance + winAmount);
+                        this.updateWinDisplay(winAmount);
+                    }
+                    
+                    this.balls.splice(i, 1);
+                    
+                    if (this.balls.length < this.config.enableButton) {
+                        document.getElementById('dropButton').disabled = false;
+                    }
+                }
+            }
+        }
+    
+        draw() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            this.ctx.strokeStyle = '#e74c3c';
+            this.ctx.lineWidth = 2;
+            
+            const startX = this.canvas.width / 2;
+            const gridHeight = (this.dimensions.rows - 1) * this.dimensions.spacing;
+            const startY = (this.canvas.height - gridHeight) / 2;
+            const maxWidth = (this.dimensions.rows - 1) * this.dimensions.spacing;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(startX - this.config.barrierOffset, startY - this.config.barrierOffset);
+            this.ctx.lineTo(startX - (maxWidth / 2) - this.config.barrierOffset, startY + gridHeight - this.config.barrierOffset);
+            this.ctx.stroke();
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(startX + this.config.barrierOffset, startY - this.config.barrierOffset);
+            this.ctx.lineTo(startX + (maxWidth / 2) + this.config.barrierOffset, startY + gridHeight - this.config.barrierOffset);
+            this.ctx.stroke();
+    
+            this.ctx.fillStyle = '#ecf0f1';
+            for (let pin of this.pins) {
+                this.ctx.beginPath();
+                this.ctx.arc(pin.x, pin.y, this.dimensions.pinRadius, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+    
+            this.ctx.strokeStyle = '#ecf0f1';
+            this.ctx.lineWidth = 2;
+            this.ctx.fillStyle = '#ecf0f1';
+            this.ctx.font = '16px "Courier New"';
+            this.ctx.textAlign = 'center';
+            
+            for (let i = 0; i < this.slots.length; i++) {
+                const slot = this.slots[i];
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(slot.x, this.bottomRowPins[0].y + this.dimensions.pinRadius);
+                this.ctx.lineTo(slot.x, this.canvas.height - 30);
+                this.ctx.stroke();
+            
+                const multiplierText = `${this.multipliers[i]}x`;
+                const xPos = slot.x;
+                const yPos = this.canvas.height - 10;
+                
+                const textWidth = this.ctx.measureText(multiplierText).width;
+                this.ctx.fillStyle = 'rgba(44, 62, 80, 0.8)';
+                this.ctx.fillRect(xPos - textWidth/2 - 5, yPos - 16, textWidth + 10, 22);
+                
+                this.ctx.fillStyle = '#ecf0f1';
+                this.ctx.fillText(multiplierText, xPos, yPos);
+            }
+    
+            for (let ball of this.balls) {
+                this.ctx.fillStyle = ball.invalid ? '#808080' : '#e74c3c';
+                this.ctx.beginPath();
+                this.ctx.arc(ball.x, ball.y, this.dimensions.ballRadius, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+    
+            for (let ball of this.balls) {
+                this.ctx.font = `${this.dimensions.ballRadius * 2}px Arial`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(
+                    ball.emoji,
+                    ball.x,
+                    ball.y
+                );
+            }
+        }
+    
+        gameLoop() {
+            this.update();
+            this.draw();
+            requestAnimationFrame(() => this.gameLoop());
+        }
+    
+        lineCircleCollision(lineStart, lineEnd, circleX, circleY, radius) {
+            const lineVector = {
+                x: lineEnd.x - lineStart.x,
+                y: lineEnd.y - lineStart.y
+            };
+            const circleVector = {
+                x: circleX - lineStart.x,
+                y: circleY - lineStart.y
+            };
+            
+            const lineLength = Math.sqrt(lineVector.x * lineVector.x + lineVector.y * lineVector.y);
+            const unitVector = {
+                x: lineVector.x / lineLength,
+                y: lineVector.y / lineLength
+            };
+            
+            const dotProduct = circleVector.x * unitVector.x + circleVector.y * unitVector.y;
+            const closestPoint = {
+                x: lineStart.x + unitVector.x * Math.max(0, Math.min(lineLength, dotProduct)),
+                y: lineStart.y + unitVector.y * Math.max(0, Math.min(lineLength, dotProduct))
+            };
+            
+            const distance = Math.sqrt(
+                Math.pow(circleX - closestPoint.x, 2) + 
+                Math.pow(circleY - closestPoint.y, 2)
+            );
+            return distance <= radius;
+        }
+    
+        bounceOffLine(ball, normalAngle) {
+            const speed = Math.sqrt(ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y);
+            const incomingAngle = Math.atan2(ball.velocity.y, ball.velocity.x);
+            const reflectionAngle = 2 * normalAngle - incomingAngle - Math.PI;
+            
+            ball.velocity.x = Math.cos(reflectionAngle) * speed * this.config.dampening;
+            ball.velocity.y = Math.sin(reflectionAngle) * speed * this.config.dampening;
+        }
+    
+        updateWinDisplay(winAmount, isLost = false) {
+            const lastWin = document.getElementById('lastWin');
+            if (isLost) {
+                const loseEmoji = this.emojis.lose[Math.floor(Math.random() * this.emojis.lose.length)];
+                lastWin.textContent = `Ball lost ${loseEmoji} no win`;
+            } else {
+                const winEmoji = this.emojis.win[Math.floor(Math.random() * this.emojis.win.length)];
+                lastWin.textContent = `$${Math.floor(winAmount)} ${winEmoji}`;
+            }
+        }
+    }
+    
+    window.addEventListener('load', () => {
+        new PlinkoGame();
+    });
+    
+    function determineMultiplier(finalBucket) {
+        if (finalBucket < 0 || finalBucket >= multipliers.length) {
+            return 0;
+        }
+        return multipliers[finalBucket];
+    }
+    </script>
+</body>
+</html>
