@@ -1,6 +1,6 @@
-# Raf's Emoji Casino
+# Raf's Emoji Casino (REC)
 
-A collection of classic casino games built with pure HTML, CSS, and JavaScript. This project showcases several casino-style games with a fun emoji theme.
+a collection of classic casino games built with pure HTML, CSS, and JavaScript. This project showcases several casino-style games with a fun emoji theme.
 
 ## Games
 
@@ -25,21 +25,7 @@ This project is built using:
 
 ## Getting Started
 
-1. Clone the repository
-```
-git clone [repository-url]
-```
-
-2. Open index.html in your web browser
-```
-open index.html
-```
-
-3. Alternatively, serve the files using a local server
-```
-python -m http.server
-```
-Then visit http://localhost:8000 in your browser.
+Play the game: RafsEmojiCasino.com
 
 ## Usage
 
