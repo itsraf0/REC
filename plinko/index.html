@@ -71,6 +71,7 @@
             padding: 10px;
             border-radius: 5px;
             text-align: center;
+            margin-bottom: 10px;
         }
 
         /* Controls */
@@ -151,6 +152,64 @@
             margin: 5px 0;
         }
 
+        /* Powerups */
+        .powerups {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .powerups h3 {
+            margin: 0;
+            color: #e74c3c;
+        }
+        
+        .powerup-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .powerup {
+            padding: 0.5rem 1rem;
+            background-color: #8e44ad;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            opacity: 0.7;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .powerup:hover:not(:disabled) {
+            background-color: #9b59b6;
+            opacity: 1;
+        }
+        
+        .powerup:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .powerup-cost {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        /* Rules section */
+        .rules {
+            color: #ecf0f1;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            text-align: left;
+            padding: 1rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+
         /* Quick switch menu */
         .quick-switch {
             position: fixed;
@@ -186,17 +245,52 @@
         .quick-switch a.current:hover {
             background: #2c3e50;
         }
+        
         #lastWin {
             margin-left: 1rem;
             font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        .win {
-            color: #2ecc71;
+        .win { color: #2ecc71; }
+        .loss { color: #e74c3c; }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
         }
 
-        .loss {
-            color: #e74c3c;
+        .fade-out {
+            animation: fadeOut 4s forwards;
+        }
+        
+        /* Ball drop animation */
+        @keyframes ballDrop {
+            0% { transform: translateY(-20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        .ball-dropping {
+            animation: ballDrop 0.3s forwards;
+        }
+        
+        /* Reset balance button */
+        #resetBalance {
+            margin-top: 10px;
+            padding: 5px;
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+        }
+        
+        #resetBalance:hover {
+            background-color: #7f8c8d;
         }
     </style>
 </head>
@@ -210,6 +304,7 @@
             <div class="stats">
                 Balance: <span id="balance">1000</span> 🪙
                 <span id="lastWin"></span>
+                <button id="resetBalance">Reset Balance</button>
             </div>
             <div class="bet-controls">
                 <h3>🪙 Bet Amount</h3>
@@ -229,13 +324,38 @@
                     <p>🔴 High: Extreme variance</p>
                 </div>
             </div>
+            <div class="powerups">
+                <h3>🔮 Powerups</h3>
+                <div class="powerup-buttons">
+                    <button id="multiBallPowerup" class="powerup" title="Drop 5 balls at once">
+                        <span>🎯 Multi Ball</span>
+                        <span class="powerup-cost">30 🪙</span>
+                    </button>
+                    <button id="magnetPowerup" class="powerup" title="Attract balls to high-value slots">
+                        <span>🧲 Magnet</span>
+                        <span class="powerup-cost">50 🪙</span>
+                    </button>
+                    <button id="luckyPowerup" class="powerup" title="Next drop has 2x payout">
+                        <span>🍀 Lucky</span>
+                        <span class="powerup-cost">25 🪙</span>
+                    </button>
+                </div>
+            </div>
+            <div class="rules">
+                <strong>Rules:</strong>
+                <br>- Drop balls and see them bounce into buckets
+                <br>- Each bucket has a multiplier value
+                <br>- Win amount = bet × multiplier
+                <br>- Higher risk levels mean higher variance
+                <br>- Powerups:
+                <br>&nbsp;&nbsp;• 🎯 Multi Ball: Drop 5 balls at once
+                <br>&nbsp;&nbsp;• 🧲 Magnet: Attract balls to high-value slots
+                <br>&nbsp;&nbsp;• 🍀 Lucky: Next drop has 2x payout
+            </div>
         </div>
     </div>
-    <div class="quick-switch">
-        <a href="../index.html">🏠 Home</a>
-        <a href="../slots">🎰 Slots</a>
-        <a href="index.html" class="current">🎱 Plinko</a>
-    </div>
+    <!-- Navigation will be dynamically added by the script -->
+    <script src="../js/navigation.js"></script>
     <script>
     
     class PlinkoGame {
@@ -249,7 +369,7 @@
                 pinBounceRandomness: 2,  // Maximum random bounce effect from pins
                 maxBalls: 100,           // Maximum balls allowed in play
                 enableButton: 5,         // Re-enable drop button when balls below this
-                centerPull: 0,       // Center pull force
+                centerPull: 0,           // Center pull force
                 speedMultiplier: 1       // Global speed multiplier for balls
             };
     
@@ -273,6 +393,20 @@
                 win: ['🎉', '💫', '✨', '🌟', '💎'],
                 lose: ['💨', '🌪️', '💭']
             };
+            
+            // Powerups state
+            this.powerups = {
+                multiBall: false,    // Drop 5 balls at once
+                magnet: false,       // Attract balls to high-value slots
+                lucky: false         // Next drop has 2x payout
+            };
+            
+            // Powerup costs
+            this.powerupCosts = {
+                multiBall: 30,
+                magnet: 50,
+                lucky: 25
+            };
     
             this.canvas = document.getElementById('plinkoCanvas');
             this.ctx = this.canvas.getContext('2d');
@@ -283,6 +417,7 @@
             this.currentRisk = 'low';
             this.multipliers = this.riskMultipliers[this.currentRisk];
             this.slots = [];
+            this.highValueSlots = [0, 8]; // Highest value slots (left and right)
             this.balance = this.getBalance();
             this.setupGame();
             this.setupEventListeners();
@@ -328,6 +463,27 @@
                     multiplier: this.multipliers[i]
                 });
             }
+            
+            // Update high value slots based on risk level
+            this.updateHighValueSlots();
+        }
+        
+        updateHighValueSlots() {
+            // Find slots with highest multipliers
+            let highestMultiplier = 0;
+            const highValueIndices = [];
+            
+            for (let i = 0; i < this.multipliers.length; i++) {
+                if (this.multipliers[i] > highestMultiplier) {
+                    highestMultiplier = this.multipliers[i];
+                    highValueIndices.length = 0;
+                    highValueIndices.push(i);
+                } else if (this.multipliers[i] === highestMultiplier) {
+                    highValueIndices.push(i);
+                }
+            }
+            
+            this.highValueSlots = highValueIndices;
         }
     
         setupEventListeners() {
@@ -351,16 +507,72 @@
                     for (let i = 0; i < this.slots.length; i++) {
                         this.slots[i].multiplier = this.multipliers[i];
                     }
+                    this.updateHighValueSlots();
                 });
             }
+            
+            // Add powerup event listeners
+            document.getElementById('multiBallPowerup').addEventListener('click', () => this.activatePowerup('multiBall'));
+            document.getElementById('magnetPowerup').addEventListener('click', () => this.activatePowerup('magnet'));
+            document.getElementById('luckyPowerup').addEventListener('click', () => this.activatePowerup('lucky'));
+            
+            // Reset balance button
+            document.getElementById('resetBalance').addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset your balance to 1000?')) {
+                    this.balance = 1000;
+                    this.updateBalance(this.balance);
+                    this.showWinMessage("Balance reset to 1000 🪙", "win");
+                }
+            });
     
+            // Update UI elements
             document.getElementById('balance').textContent = this.balance;
+            this.updatePowerupButtons();
+        }
+        
+        activatePowerup(type) {
+            const cost = this.powerupCosts[type];
+            
+            if (this.balance < cost) {
+                this.showWinMessage(`Not enough coins for ${type} powerup!`, "loss");
+                return;
+            }
+            
+            this.balance -= cost;
+            this.updateBalance(this.balance);
+            
+            this.powerups[type] = true;
+            document.getElementById(`${type}Powerup`).style.opacity = '1';
+            
+            let message = '';
+            if (type === 'multiBall') {
+                message = '5x Multi Ball powerup activated! 🎯';
+            } else if (type === 'magnet') {
+                message = 'Magnet powerup activated! 🧲';
+            } else if (type === 'lucky') {
+                message = 'Lucky powerup activated! 🍀';
+            }
+            
+            this.showWinMessage(message, "win");
+            this.updatePowerupButtons();
+        }
+        
+        updatePowerupButtons() {
+            for (const type in this.powerupCosts) {
+                const button = document.getElementById(`${type}Powerup`);
+                button.disabled = this.balance < this.powerupCosts[type];
+                
+                // Reset opacity if not active
+                if (!this.powerups[type]) {
+                    button.style.opacity = button.disabled ? '0.3' : '0.7';
+                }
+            }
         }
     
         setCookie(name, value, days) {
             const expires = new Date();
             expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
         }
     
         getCookie(name) {
@@ -379,19 +591,24 @@
         }
     
         updateBalance(newBalance) {
-            this.balance = newBalance
+            this.balance = newBalance;
             document.getElementById('balance').textContent = Math.floor(this.balance);
             this.setCookie('gameBalance', this.balance, 30);
+            this.updatePowerupButtons();
         }
     
         dropBall() {
             let betAmount = parseInt(document.getElementById('betAmount').value);
             
-            if (isNaN(betAmount) || betAmount <= 0) return;
+            if (isNaN(betAmount) || betAmount <= 0) {
+                this.showWinMessage("Please enter a valid bet!", "loss");
+                return;
+            }
     
             if (betAmount > this.balance) {
                 betAmount = this.balance;
                 document.getElementById('betAmount').value = betAmount;
+                this.showWinMessage("Bet adjusted to match your balance", "loss");
             }
             
             this.updateBalance(this.balance - betAmount);
@@ -399,15 +616,41 @@
             if (this.balls.length >= this.config.maxBalls) {
                 document.getElementById('dropButton').disabled = true;
             }
-    
-            const ball = {
-                x: this.canvas.width / 2 + (Math.random() - 0.5) * 20,
-                y: 50,
-                velocity: { x: 0, y: 0 },
-                betAmount: betAmount,
-                emoji: this.emojis.ball[Math.floor(Math.random() * this.emojis.ball.length)]
-            };
-            this.balls.push(ball);
+            
+            // Handle multiBall powerup
+            const ballCount = this.powerups.multiBall ? 5 : 1;
+            
+            for (let i = 0; i < ballCount; i++) {
+                // Slight randomization for multiple balls
+                const offset = ballCount > 1 ? (Math.random() - 0.5) * 40 : (Math.random() - 0.5) * 20;
+                
+                const ball = {
+                    x: this.canvas.width / 2 + offset,
+                    y: 50,
+                    velocity: { x: 0, y: 0 },
+                    betAmount: betAmount / ballCount, // Split bet among balls
+                    emoji: this.emojis.ball[Math.floor(Math.random() * this.emojis.ball.length)],
+                    lucky: this.powerups.lucky,
+                    magnet: this.powerups.magnet
+                };
+                this.balls.push(ball);
+            }
+            
+            // Reset powerups after use
+            if (this.powerups.multiBall) {
+                this.powerups.multiBall = false;
+                document.getElementById('multiBallPowerup').style.opacity = '0.7';
+            }
+            
+            if (this.powerups.magnet) {
+                this.powerups.magnet = false;
+                document.getElementById('magnetPowerup').style.opacity = '0.7';
+            }
+            
+            if (this.powerups.lucky) {
+                this.powerups.lucky = false;
+                document.getElementById('luckyPowerup').style.opacity = '0.7';
+            }
         }
     
         update() {
@@ -417,6 +660,27 @@
                 const prevX = ball.x;
                 const prevY = ball.y;
                 ball.velocity.y += this.config.gravity;
+                
+                // Apply magnet powerup if enabled for this ball
+                if (ball.magnet && this.highValueSlots.length > 0) {
+                    // Find the closest high value slot
+                    let closestSlot = this.highValueSlots[0];
+                    let minDistance = Math.abs(ball.x - this.slots[closestSlot].x);
+                    
+                    for (let j = 1; j < this.highValueSlots.length; j++) {
+                        const slotIdx = this.highValueSlots[j];
+                        const distance = Math.abs(ball.x - this.slots[slotIdx].x);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestSlot = slotIdx;
+                        }
+                    }
+                    
+                    // Apply magnetic force toward the closest high value slot
+                    const targetX = this.slots[closestSlot].x;
+                    const magnetForce = (targetX - ball.x) * 0.03; // Adjust magnetism strength
+                    ball.velocity.x += magnetForce;
+                }
                 
                 const centerX = this.canvas.width / 2;
                 const pullForce = (centerX - ball.x) * this.config.centerPull;
@@ -520,12 +784,22 @@
     
                     const maxAllowedDistance = this.dimensions.spacing / 2;
                     if (minDistance > maxAllowedDistance) {
-                        this.updateWinDisplay(0, true);
+                        this.showWinMessage("Ball lost outside any bucket!", "loss");
                     } else {
-                        const multiplier = this.multipliers[closestSlot];
+                        let multiplier = this.multipliers[closestSlot];
+                        
+                        // Apply lucky powerup
+                        if (ball.lucky) {
+                            multiplier *= 2;
+                        }
+                        
                         const winAmount = ball.betAmount * multiplier;
                         this.updateBalance(this.balance + winAmount);
-                        this.updateWinDisplay(winAmount);
+                        
+                        // Show appropriate message
+                        const winEmoji = this.emojis.win[Math.floor(Math.random() * this.emojis.win.length)];
+                        const messagePrefix = ball.lucky ? "Lucky win! " : "";
+                        this.showWinMessage(`${messagePrefix}+${Math.floor(winAmount)} 🪙 (${multiplier}x) ${winEmoji}`, "win");
                     }
                     
                     this.balls.splice(i, 1);
@@ -578,6 +852,18 @@
                 this.ctx.moveTo(slot.x, this.bottomRowPins[0].y + this.dimensions.pinRadius);
                 this.ctx.lineTo(slot.x, this.canvas.height - 30);
                 this.ctx.stroke();
+                
+                // Highlight high value slots if magnet powerup is active
+                if (this.powerups.magnet && this.highValueSlots.includes(i)) {
+                    this.ctx.save();
+                    this.ctx.strokeStyle = '#9b59b6'; // Purple highlight
+                    this.ctx.lineWidth = 3;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(slot.x, this.bottomRowPins[0].y + this.dimensions.pinRadius);
+                    this.ctx.lineTo(slot.x, this.canvas.height - 30);
+                    this.ctx.stroke();
+                    this.ctx.restore();
+                }
             
                 const multiplierText = `${this.multipliers[i]}x`;
                 const xPos = slot.x;
@@ -587,18 +873,28 @@
                 this.ctx.fillStyle = 'rgba(44, 62, 80, 0.8)';
                 this.ctx.fillRect(xPos - textWidth/2 - 5, yPos - 16, textWidth + 10, 22);
                 
-                this.ctx.fillStyle = '#ecf0f1';
+                // Highlight high value slots
+                if (this.highValueSlots.includes(i)) {
+                    this.ctx.fillStyle = this.powerups.magnet ? '#9b59b6' : '#e74c3c';
+                } else {
+                    this.ctx.fillStyle = '#ecf0f1';
+                }
+                
                 this.ctx.fillText(multiplierText, xPos, yPos);
             }
     
             for (let ball of this.balls) {
-                this.ctx.fillStyle = ball.invalid ? '#808080' : '#e74c3c';
+                // Draw ball background
+                const ballColor = ball.invalid ? '#808080' : 
+                                  ball.lucky ? '#2ecc71' : 
+                                  ball.magnet ? '#9b59b6' : '#e74c3c';
+                                  
+                this.ctx.fillStyle = ballColor;
                 this.ctx.beginPath();
                 this.ctx.arc(ball.x, ball.y, this.dimensions.ballRadius, 0, Math.PI * 2);
                 this.ctx.fill();
-            }
-    
-            for (let ball of this.balls) {
+                
+                // Draw ball emoji
                 this.ctx.font = `${this.dimensions.ballRadius * 2}px Arial`;
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'middle';
@@ -654,14 +950,27 @@
             ball.velocity.y = Math.sin(reflectionAngle) * speed * this.config.dampening;
         }
     
-        updateWinDisplay(winAmount, isLost = false) {
+        showWinMessage(message, type) {
             const lastWin = document.getElementById('lastWin');
+            lastWin.textContent = message;
+            lastWin.className = type;
+            lastWin.style.opacity = '1';
+            
+            // Remove old animation
+            lastWin.classList.remove('fade-out');
+            // Trigger reflow
+            void lastWin.offsetWidth;
+            // Add new animation
+            lastWin.classList.add('fade-out');
+        }
+        
+        updateWinDisplay(winAmount, isLost = false) {
             if (isLost) {
                 const loseEmoji = this.emojis.lose[Math.floor(Math.random() * this.emojis.lose.length)];
-                lastWin.textContent = `Ball lost ${loseEmoji} no win`;
+                this.showWinMessage(`Ball lost ${loseEmoji} no win`, "loss");
             } else {
                 const winEmoji = this.emojis.win[Math.floor(Math.random() * this.emojis.win.length)];
-                lastWin.textContent = `$${Math.floor(winAmount)} ${winEmoji}`;
+                this.showWinMessage(`+${Math.floor(winAmount)} 🪙 ${winEmoji}`, "win");
             }
         }
     }
@@ -669,13 +978,6 @@
     window.addEventListener('load', () => {
         new PlinkoGame();
     });
-    
-    function determineMultiplier(finalBucket) {
-        if (finalBucket < 0 || finalBucket >= multipliers.length) {
-            return 0;
-        }
-        return multipliers[finalBucket];
-    }
     </script>
 </body>
 </html>

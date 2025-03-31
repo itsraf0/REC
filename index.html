@@ -90,6 +90,43 @@
             border-radius: 5px;
             font-weight: bold;
         }
+
+        /* Quick switch menu */
+        .quick-switch {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quick-switch a {
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-switch a:hover {
+            background: #c0392b;
+        }
+
+        .quick-switch a.current {
+            background: #e74c3c;
+            border: 2px solid #ecf0f1;
+        }
+
+        .quick-switch a.current:hover {
+            background: #c0392b;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="menu-page">
@@ -114,5 +151,8 @@
             </a>
         </div>
     </div>
+
+    <!-- Navigation will be dynamically added by the script -->
+    <script src="js/navigation.js"></script>
 </body>
 </html>
