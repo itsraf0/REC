@@ -562,7 +562,7 @@
         function updateScoreDisplay() {
             document.getElementById('playerScore').textContent = calculateHandValue(playerHand);
             
-            // Only show dealer's score based on visible cards
+            // show dealer's score based on visible cards
             const visibleDealerCards = dealerHand.filter((_, index) => index !== 1 || !document.querySelector('#dealerCards .card.hidden'));
             document.getElementById('dealerScore').textContent = calculateHandValue(visibleDealerCards);
         }
