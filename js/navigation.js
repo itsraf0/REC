@@ -4,7 +4,8 @@ const casinoGames = [
     { id: 'slots', name: 'Slots', emoji: '🎰', path: '/slots/index.html', description: 'Play Slots' },
     { id: 'plinko', name: 'Plinko', emoji: '🎱', path: '/plinko/index.html', description: 'Play Plinko' },
     { id: 'dice', name: 'Dice', emoji: '🎲', path: '/dice/index.html', description: 'Play Dice' },
-    { id: 'blackjack', name: 'Blackjack', emoji: '♠️', path: '/blackjack/index.html', description: 'Play Blackjack' }
+    { id: 'blackjack', name: 'Blackjack', emoji: '♠️', path: '/blackjack/index.html', description: 'Play Blackjack' },
+    { id: 'roulette', name: 'Roulette', emoji: '🎡', path: '/roulette/index.html', description: 'Play Roulette' }
 ];
 
 // Function to generate the navigation menu HTML

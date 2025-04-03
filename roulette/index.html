@@ -3,318 +3,491 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roulette - Raf's Emoji Casino</title>
+    <title>REC - Roulette</title>
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
-    <style>
-        body {
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #2c3e50;
-            color: white;
-        }
-
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-            gap: 2rem;
-        }
-
-        .wheel-container {
-            position: relative;
-            width: 400px;
-            height: 400px;
-            margin: 2rem 0;
-        }
-
-        .wheel {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            position: relative;
-            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
-        }
-
-        .wheel-segment {
-            position: absolute;
-            width: 50%;
-            height: 50%;
-            transform-origin: 100% 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: bold;
-            color: white;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-        }
-
-        .pointer {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 40px solid #e74c3c;
-            z-index: 2;
-        }
-
-        .controls {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        button {
-            padding: 1rem 2rem;
-            font-size: 1.2rem;
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #c0392b;
-        }
-
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-
-        .stats {
-            display: flex;
-            gap: 2rem;
-            margin-top: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .powerups {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .powerup {
-            padding: 0.5rem 1rem;
-            background-color: #3498db;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .powerup:hover {
-            background-color: #2980b9;
-        }
-
-        .powerup.active {
-            background-color: #2ecc71;
-        }
-
-        .bet-controls {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .bet-amount {
-            padding: 0.5rem;
-            font-size: 1.2rem;
-            width: 100px;
-            text-align: center;
-        }
-
-        .result {
-            font-size: 1.5rem;
-            margin-top: 1rem;
-            text-align: center;
-        }
-
-        .win {
-            color: #2ecc71;
-        }
-
-        .lose {
-            color: #e74c3c;
-        }
-    </style>
+    <link rel="stylesheet" href="../styles.css">
 </head>
-<body>
+<body class="roulette-page">
     <div class="game-container">
-        <h1>🎡 Roulette</h1>
-        <div class="wheel-container">
-            <div class="pointer"></div>
-            <div class="wheel" id="wheel"></div>
+        <div class="roulette-game">
+            <h1>🎮 Emoji Roulette 🎲</h1>
+            
+            <div class="game-area">
+                <div class="wheel-area">
+                    <div class="area-label">Roulette Wheel</div>
+                    <div class="wheel-placeholder">
+                        <div class="wheel-center">Spin the wheel!</div>
+                    </div>
+                    <div class="result-display" id="resultDisplay"></div>
+                </div>
+                
+                <div class="bet-area">
+                    <div class="area-label">Place Your Bets</div>
+                    <div class="betting-table" id="bettingTable">
+                        <!-- Numbers will be added by JavaScript -->
+                    </div>
+                    <div class="special-bets">
+                        <div class="special-bet" data-bet="red">Red</div>
+                        <div class="special-bet" data-bet="black">Black</div>
+                        <div class="special-bet" data-bet="even">Even</div>
+                        <div class="special-bet" data-bet="odd">Odd</div>
+                        <div class="special-bet" data-bet="low">1-18</div>
+                        <div class="special-bet" data-bet="high">19-36</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="bet-controls">
-            <input type="number" class="bet-amount" id="betAmount" min="1" value="10">
-            <button id="spinButton">Spin!</button>
+        
+        <div class="game-settings">
+            <div class="stats">
+                Balance: <span id="balance">100</span> 🪙 
+                <span id="lastWin"></span>
+                <button id="resetBalance">Reset Balance</button>
+            </div>
+            
+            <div class="bet-controls">
+                <h3>🪙 Bet Amount</h3>
+                <input type="number" id="betAmount" value="5" min="1" max="100">
+                <button id="spinButton">Spin the Wheel</button>
+                <button id="clearBetsButton">Clear Bets</button>
+            </div>
+            
+            <div class="powerups">
+                <h3>🔮 Powerups</h3>
+                <div class="powerup-buttons">
+                    <button class="powerup" id="neighborsPowerup" title="Bet on 5 neighboring numbers for the price of 3" onclick="activatePowerup('neighbors')">
+                        <span>🔄 Neighbors</span>
+                        <span class="powerup-cost">15 🪙</span>
+                    </button>
+                    <button class="powerup" id="boostPowerup" title="Boost any win by 25%" onclick="activatePowerup('boost')">
+                        <span>🚀 Boost</span>
+                        <span class="powerup-cost">20 🪙</span>
+                    </button>
+                    <button class="powerup" id="insurancePowerup" title="Get 50% of your bet back if you lose" onclick="activatePowerup('insurance')">
+                        <span>🛡️ Insurance</span>
+                        <span class="powerup-cost">10 🪙</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="rules">
+                <strong>Rules:</strong>
+                <br>- Bet on numbers, colors, or groups
+                <br>- Single number bet pays 35:1
+                <br>- Red/Black pays 1:1
+                <br>- Even/Odd pays 1:1
+                <br>- 1-18/19-36 pays 1:1
+                <br>- 0 is green and not part of any group
+                <br>- Powerups:
+                <br>&nbsp;&nbsp;• 🔄 Neighbors: Bet on 5 adjacent numbers for the price of 3
+                <br>&nbsp;&nbsp;• 🚀 Boost: Increases any win by 25%
+                <br>&nbsp;&nbsp;• 🛡️ Insurance: Get 50% of your bet back if you lose
+            </div>
         </div>
-        <div class="powerups" id="powerups">
-            <div class="powerup" data-powerup="double">2x Multiplier</div>
-            <div class="powerup" data-powerup="safe">Safe Bet</div>
-            <div class="powerup" data-powerup="lucky">Lucky Number</div>
-        </div>
-        <div class="stats">
-            <div>Balance: <span id="balance">1000</span></div>
-            <div>Wins: <span id="wins">0</span></div>
-            <div>Losses: <span id="losses">0</span></div>
-        </div>
-        <div class="result" id="result"></div>
     </div>
+    
+    <!-- Navigation will be dynamically added by the script -->
+    <script src="../js/navigation.js"></script>
     <script>
-        class RouletteGame {
-            constructor() {
-                this.wheel = document.getElementById('wheel');
-                this.spinButton = document.getElementById('spinButton');
-                this.betAmount = document.getElementById('betAmount');
-                this.balance = document.getElementById('balance');
-                this.wins = document.getElementById('wins');
-                this.losses = document.getElementById('losses');
-                this.result = document.getElementById('result');
-                this.powerups = document.getElementById('powerups');
-                
-                this.currentBalance = 1000;
-                this.winCount = 0;
-                this.lossCount = 0;
-                this.isSpinning = false;
-                this.activePowerups = new Set();
-                
-                this.segments = [
-                    { emoji: '🎰', value: 5, color: '#e74c3c' },
-                    { emoji: '🎲', value: 3, color: '#3498db' },
-                    { emoji: '🎯', value: 2, color: '#2ecc71' },
-                    { emoji: '💎', value: 10, color: '#f1c40f' },
-                    { emoji: '🌟', value: 7, color: '#9b59b6' },
-                    { emoji: '🎨', value: 4, color: '#1abc9c' },
-                    { emoji: '🎭', value: 6, color: '#e67e22' },
-                    { emoji: '🎪', value: 8, color: '#34495e' }
-                ];
-
-                this.initializeWheel();
-                this.setupEventListeners();
-                this.updateStats();
+        // Game state variables
+        let balance = 100;
+        let currentBets = {};  // Object to track bets placed
+        let totalBetAmount = 0;
+        let gameInProgress = false;
+        let isPowerupActive = {
+            neighbors: false,
+            boost: false,
+            insurance: false
+        };
+        
+        // Roulette data
+        const rouletteNumbers = [
+            {number: 0, color: 'green'},
+            {number: 32, color: 'red'}, {number: 15, color: 'black'}, {number: 19, color: 'red'}, 
+            {number: 4, color: 'black'}, {number: 21, color: 'red'}, {number: 2, color: 'black'}, 
+            {number: 25, color: 'red'}, {number: 17, color: 'black'}, {number: 34, color: 'red'}, 
+            {number: 6, color: 'black'}, {number: 27, color: 'red'}, {number: 13, color: 'black'}, 
+            {number: 36, color: 'red'}, {number: 11, color: 'black'}, {number: 30, color: 'red'}, 
+            {number: 8, color: 'black'}, {number: 23, color: 'red'}, {number: 10, color: 'black'}, 
+            {number: 5, color: 'red'}, {number: 24, color: 'black'}, {number: 16, color: 'red'}, 
+            {number: 33, color: 'black'}, {number: 1, color: 'red'}, {number: 20, color: 'black'}, 
+            {number: 14, color: 'red'}, {number: 31, color: 'black'}, {number: 9, color: 'red'}, 
+            {number: 22, color: 'black'}, {number: 18, color: 'red'}, {number: 29, color: 'black'}, 
+            {number: 7, color: 'red'}, {number: 28, color: 'black'}, {number: 12, color: 'red'}, 
+            {number: 35, color: 'black'}, {number: 3, color: 'red'}, {number: 26, color: 'black'}
+        ];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load balance from localStorage if available
+            const savedBalance = localStorage.getItem('rouletteBalance');
+            if (savedBalance) {
+                balance = parseInt(savedBalance);
+                updateBalance();
             }
-
-            initializeWheel() {
-                const segmentAngle = 360 / this.segments.length;
-                this.segments.forEach((segment, index) => {
-                    const segmentElement = document.createElement('div');
-                    segmentElement.className = 'wheel-segment';
-                    segmentElement.style.transform = `rotate(${index * segmentAngle}deg)`;
-                    segmentElement.style.backgroundColor = segment.color;
-                    segmentElement.textContent = segment.emoji;
-                    this.wheel.appendChild(segmentElement);
-                });
-            }
-
-            setupEventListeners() {
-                this.spinButton.addEventListener('click', () => this.spin());
-                this.powerups.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('powerup')) {
-                        this.togglePowerup(e.target);
-                    }
-                });
-            }
-
-            togglePowerup(powerupElement) {
-                const powerup = powerupElement.dataset.powerup;
-                if (this.activePowerups.has(powerup)) {
-                    this.activePowerups.delete(powerup);
-                    powerupElement.classList.remove('active');
-                } else {
-                    this.activePowerups.add(powerup);
-                    powerupElement.classList.add('active');
+            
+            // Create betting table
+            createBettingTable();
+            
+            // Add event listeners
+            document.getElementById('spinButton').addEventListener('click', spinWheel);
+            document.getElementById('clearBetsButton').addEventListener('click', clearBets);
+            
+            // Reset balance button
+            document.getElementById('resetBalance').addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset your balance to 100?')) {
+                    balance = 100;
+                    updateBalance();
+                    showMessage("Balance reset to 100 🪙", "win");
                 }
-            }
-
-            spin() {
-                if (this.isSpinning) return;
-
-                const bet = parseInt(this.betAmount.value);
-                if (bet > this.currentBalance) {
-                    this.showResult('Insufficient balance!', false);
-                    return;
-                }
-
-                this.isSpinning = true;
-                this.spinButton.disabled = true;
-
-                // Calculate random rotation (5-10 full spins plus final position)
-                const spins = 5 + Math.random() * 5;
-                const finalAngle = Math.random() * 360;
-                const totalRotation = spins * 360 + finalAngle;
-
-                // Apply rotation
-                this.wheel.style.transform = `rotate(${totalRotation}deg)`;
-
-                // Calculate result after animation
-                setTimeout(() => {
-                    const selectedIndex = Math.floor((360 - (finalAngle % 360)) / (360 / this.segments.length));
-                    const selectedSegment = this.segments[selectedIndex];
-                    
-                    let winAmount = bet * selectedSegment.value;
-                    
-                    // Apply powerups
-                    if (this.activePowerups.has('double')) {
-                        winAmount *= 2;
-                    }
-                    if (this.activePowerups.has('safe')) {
-                        winAmount = Math.max(winAmount, bet);
-                    }
-                    if (this.activePowerups.has('lucky') && Math.random() < 0.3) {
-                        winAmount *= 3;
-                    }
-
-                    // Update balance and stats
-                    this.currentBalance += winAmount - bet;
-                    if (winAmount > bet) {
-                        this.winCount++;
-                        this.showResult(`You won ${winAmount}!`, true);
-                    } else {
-                        this.lossCount++;
-                        this.showResult(`You lost ${bet}!`, false);
-                    }
-
-                    this.updateStats();
-                    this.isSpinning = false;
-                    this.spinButton.disabled = false;
-                }, 4000);
-            }
-
-            updateStats() {
-                this.balance.textContent = this.currentBalance;
-                this.wins.textContent = this.winCount;
-                this.losses.textContent = this.lossCount;
-            }
-
-            showResult(message, isWin) {
-                this.result.textContent = message;
-                this.result.className = `result ${isWin ? 'win' : 'lose'}`;
-                setTimeout(() => {
-                    this.result.textContent = '';
-                    this.result.className = 'result';
-                }, 3000);
+            });
+            
+            // Add event listeners for special bets
+            document.querySelectorAll('.special-bet').forEach(element => {
+                element.addEventListener('click', function() {
+                    placeBet(this.getAttribute('data-bet'));
+                });
+            });
+            
+            updatePowerupButtons();
+        });
+        
+        function createBettingTable() {
+            const tableContainer = document.getElementById('bettingTable');
+            tableContainer.innerHTML = '';
+            
+            // Add 0
+            const zeroBtn = document.createElement('div');
+            zeroBtn.className = 'bet-button green';
+            zeroBtn.textContent = '0';
+            zeroBtn.setAttribute('data-number', '0');
+            zeroBtn.style.gridColumn = '1 / span 3';
+            zeroBtn.addEventListener('click', function() {
+                placeBet(0);
+            });
+            tableContainer.appendChild(zeroBtn);
+            
+            // Add numbers 1-36
+            for (let i = 1; i <= 36; i++) {
+                const numberBtn = document.createElement('div');
+                const numData = rouletteNumbers.find(item => item.number === i);
+                numberBtn.className = `bet-button ${numData.color}`;
+                numberBtn.textContent = i;
+                numberBtn.setAttribute('data-number', i);
+                numberBtn.addEventListener('click', function() {
+                    placeBet(parseInt(this.getAttribute('data-number')));
+                });
+                tableContainer.appendChild(numberBtn);
             }
         }
-
-        // Initialize the game when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new RouletteGame();
-        });
+        
+        function updateBalance() {
+            document.getElementById('balance').textContent = balance;
+            localStorage.setItem('rouletteBalance', balance);
+            updatePowerupButtons();
+        }
+        
+        function updatePowerupButtons() {
+            document.getElementById('neighborsPowerup').disabled = balance < 15 || gameInProgress;
+            document.getElementById('boostPowerup').disabled = balance < 20 || gameInProgress;
+            document.getElementById('insurancePowerup').disabled = balance < 10 || gameInProgress;
+        }
+        
+        function placeBet(betTarget) {
+            if (gameInProgress) {
+                showMessage("Can't place bets while spinning!", "loss");
+                return;
+            }
+            
+            // Get bet amount
+            const betInput = document.getElementById('betAmount');
+            const betAmount = parseInt(betInput.value);
+            
+            // Validate bet
+            if (isNaN(betAmount) || betAmount < 1) {
+                showMessage("Please enter a valid bet!", "loss");
+                return;
+            }
+            
+            if (betAmount > balance) {
+                showMessage("Not enough coins!", "loss");
+                return;
+            }
+            
+            // Handle neighbors powerup for number bets
+            if (typeof betTarget === 'number' && isPowerupActive.neighbors) {
+                placeBetWithNeighbors(betTarget, betAmount);
+                isPowerupActive.neighbors = false;
+                document.getElementById('neighborsPowerup').style.opacity = '0.7';
+                return;
+            }
+            
+            // Update balance
+            balance -= betAmount;
+            updateBalance();
+            
+            // Update total bet amount
+            totalBetAmount += betAmount;
+            
+            // Add to current bets
+            if (currentBets[betTarget]) {
+                currentBets[betTarget] += betAmount;
+            } else {
+                currentBets[betTarget] = betAmount;
+            }
+            
+            // Highlight selected bet
+            highlightSelectedBets();
+            
+            showMessage(`Bet placed on ${betTarget}: ${betAmount} 🪙`, "win");
+        }
+        
+        function placeBetWithNeighbors(number, betAmount) {
+            // Find neighbor numbers in the roulette wheel
+            const index = rouletteNumbers.findIndex(item => item.number === number);
+            const neighbors = [];
+            
+            // Get 2 numbers before and 2 numbers after
+            for (let i = -2; i <= 2; i++) {
+                if (i === 0) continue; // Skip the center number, already betting on it
+                
+                const neighborIndex = (index + i + rouletteNumbers.length) % rouletteNumbers.length;
+                neighbors.push(rouletteNumbers[neighborIndex].number);
+            }
+            
+            // Place bets on all 5 numbers (center + 4 neighbors) for the price of 3
+            // Deduct cost of 3 bets from balance
+            balance -= betAmount * 3;
+            updateBalance();
+            
+            // Place bet on the center number and 4 neighbors
+            currentBets[number] = betAmount;
+            totalBetAmount += betAmount;
+            
+            for (const neighbor of neighbors) {
+                if (currentBets[neighbor]) {
+                    currentBets[neighbor] += betAmount;
+                } else {
+                    currentBets[neighbor] = betAmount;
+                }
+                totalBetAmount += betAmount;
+            }
+            
+            highlightSelectedBets();
+            showMessage(`Neighbors bet placed on ${number} and 4 surrounding numbers!`, "win");
+        }
+        
+        function highlightSelectedBets() {
+            // Clear all highlights
+            document.querySelectorAll('.bet-button, .special-bet').forEach(element => {
+                element.classList.remove('selected');
+            });
+            
+            // Highlight selected number bets
+            for (const bet in currentBets) {
+                if (!isNaN(parseInt(bet))) {
+                    const betElement = document.querySelector(`.bet-button[data-number="${bet}"]`);
+                    if (betElement) {
+                        betElement.classList.add('selected');
+                    }
+                } else {
+                    // Highlight special bets
+                    const specialBetElement = document.querySelector(`.special-bet[data-bet="${bet}"]`);
+                    if (specialBetElement) {
+                        specialBetElement.classList.add('selected');
+                    }
+                }
+            }
+        }
+        
+        function clearBets() {
+            if (gameInProgress) {
+                showMessage("Can't clear bets while spinning!", "loss");
+                return;
+            }
+            
+            // Return all bets to balance
+            balance += totalBetAmount;
+            updateBalance();
+            
+            // Clear bets
+            currentBets = {};
+            totalBetAmount = 0;
+            
+            // Clear highlights
+            highlightSelectedBets();
+            
+            showMessage("All bets cleared!", "win");
+        }
+        
+        function spinWheel() {
+            if (gameInProgress) {
+                return;
+            }
+            
+            if (totalBetAmount === 0) {
+                showMessage("Please place a bet first!", "loss");
+                return;
+            }
+            
+            gameInProgress = true;
+            
+            // Disable buttons during spin
+            document.getElementById('spinButton').disabled = true;
+            document.getElementById('clearBetsButton').disabled = true;
+            updatePowerupButtons();
+            
+            // Simulate wheel spinning animation
+            const resultDisplay = document.getElementById('resultDisplay');
+            resultDisplay.textContent = "Spinning...";
+            
+            // Update wheel placeholder
+            const wheelCenter = document.querySelector('.wheel-center');
+            wheelCenter.textContent = "Spinning...";
+            
+            // Simulate spinning delay
+            setTimeout(() => {
+                // Get random winning number
+                const winningIndex = Math.floor(Math.random() * rouletteNumbers.length);
+                const winningNumber = rouletteNumbers[winningIndex];
+                
+                // Display result
+                resultDisplay.textContent = `Result: ${winningNumber.number} ${winningNumber.color}`;
+                wheelCenter.textContent = winningNumber.number;
+                wheelCenter.style.color = winningNumber.color === 'red' ? '#e74c3c' : 
+                                         winningNumber.color === 'black' ? '#2c3e50' : '#009900';
+                
+                // Process wins and losses
+                calculateWinnings(winningNumber);
+                
+                // Reset game state
+                endGame();
+            }, 2000);
+        }
+        
+        function calculateWinnings(winningNumber) {
+            let totalWin = 0;
+            let message = "";
+            
+            // Calculate winnings for each bet
+            for (const bet in currentBets) {
+                const betAmount = currentBets[bet];
+                let win = 0;
+                
+                if (!isNaN(parseInt(bet))) {
+                    // Number bet
+                    if (parseInt(bet) === winningNumber.number) {
+                        win = betAmount * 36; // 35:1 payout plus original bet
+                    }
+                } else {
+                    // Special bet
+                    switch (bet) {
+                        case 'red':
+                            if (winningNumber.color === 'red') win = betAmount * 2;
+                            break;
+                        case 'black':
+                            if (winningNumber.color === 'black') win = betAmount * 2;
+                            break;
+                        case 'even':
+                            if (winningNumber.number !== 0 && winningNumber.number % 2 === 0) win = betAmount * 2;
+                            break;
+                        case 'odd':
+                            if (winningNumber.number !== 0 && winningNumber.number % 2 === 1) win = betAmount * 2;
+                            break;
+                        case 'low':
+                            if (winningNumber.number >= 1 && winningNumber.number <= 18) win = betAmount * 2;
+                            break;
+                        case 'high':
+                            if (winningNumber.number >= 19 && winningNumber.number <= 36) win = betAmount * 2;
+                            break;
+                    }
+                }
+                
+                // Apply boost powerup
+                if (win > 0 && isPowerupActive.boost) {
+                    win = Math.floor(win * 1.25);
+                    if (totalWin === 0) message = "🚀 Boost applied! ";
+                }
+                
+                totalWin += win;
+            }
+            
+            // Apply insurance powerup for losses
+            if (totalWin === 0 && isPowerupActive.insurance) {
+                totalWin = Math.floor(totalBetAmount * 0.5);
+                message = "🛡️ Insurance activated! 50% of your bet returned. ";
+            }
+            
+            // Update balance with winnings
+            if (totalWin > 0) {
+                balance += totalWin;
+                updateBalance();
+                
+                if (totalWin > totalBetAmount) {
+                    showMessage(message + `You won ${totalWin} 🪙!`, "win");
+                } else {
+                    showMessage(message + `You recovered ${totalWin} 🪙.`, "loss");
+                }
+            } else {
+                showMessage("Sorry, no win this time.", "loss");
+            }
+            
+            // Reset powerups
+            isPowerupActive.boost = false;
+            isPowerupActive.insurance = false;
+        }
+        
+        function endGame() {
+            gameInProgress = false;
+            currentBets = {};
+            totalBetAmount = 0;
+            
+            // Re-enable buttons
+            document.getElementById('spinButton').disabled = false;
+            document.getElementById('clearBetsButton').disabled = false;
+            updatePowerupButtons();
+            
+            // Clear highlights
+            highlightSelectedBets();
+        }
+        
+        function activatePowerup(type) {
+            if (gameInProgress) {
+                showMessage("Can't use powerups during a game!", "loss");
+                return;
+            }
+            
+            if (type === 'neighbors' && balance >= 15) {
+                balance -= 15;
+                isPowerupActive.neighbors = true;
+                document.getElementById('neighborsPowerup').style.opacity = '1';
+                showMessage("Neighbors powerup activated! 🔄 Select a number to bet on it and 4 neighbors.", "win");
+            } else if (type === 'boost' && balance >= 20) {
+                balance -= 20;
+                isPowerupActive.boost = true;
+                document.getElementById('boostPowerup').style.opacity = '1';
+                showMessage("Boost powerup activated! 🚀 Next win will be 25% higher.", "win");
+            } else if (type === 'insurance' && balance >= 10) {
+                balance -= 10;
+                isPowerupActive.insurance = true;
+                document.getElementById('insurancePowerup').style.opacity = '1';
+                showMessage("Insurance powerup activated! 🛡️ Recover 50% if you lose.", "win");
+            }
+            
+            updateBalance();
+        }
+        
+        function showMessage(message, type) {
+            const msgDisplay = document.getElementById('lastWin');
+            msgDisplay.textContent = message;
+            msgDisplay.className = type;
+            msgDisplay.style.opacity = 1;
+            
+            // Clear previous animation
+            msgDisplay.classList.remove('fade-out');
+            void msgDisplay.offsetWidth; // Force reflow
+            msgDisplay.classList.add('fade-out');
+        }
     </script>
 </body>
 </html> 
